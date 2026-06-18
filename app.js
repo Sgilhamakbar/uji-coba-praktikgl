@@ -2156,62 +2156,67 @@ function init() {
 let initialPinchDistance = null;
 let initialZoomState = 1;
 let lastTapTime = 0;
+let wasMultiTouch = false; // Penanda apakah user sedang mencubit
 
 function initTouchZoom() {
   const canvasWrapper = document.getElementById('canvas-wrapper');
   if (!canvasWrapper) return;
 
   canvasWrapper.addEventListener('touchstart', (e) => {
-    // 1. Deteksi Cubitan (Pinch) dengan 2 Jari
-    if (e.touches.length === 2) {
-      initialPinchDistance = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-      initialZoomState = UIManager.currentZoom;
+    // 1. Jika ada lebih dari 1 jari, tandai sebagai Multi-Touch
+    if (e.touches.length > 1) {
+      wasMultiTouch = true;
+      if (e.touches.length === 2) {
+        initialPinchDistance = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        initialZoomState = UIManager.currentZoom; //
+      }
     }
   }, { passive: false });
 
   canvasWrapper.addEventListener('touchmove', (e) => {
     // 2. Eksekusi Zoom saat 2 Jari Bergerak
     if (e.touches.length === 2 && initialPinchDistance) {
-      e.preventDefault(); // Mencegah bentrok dengan scroll browser
+      e.preventDefault(); 
       
       const currentDistance = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
       );
 
-      // Hitung rasio cubitan
       const scale = currentDistance / initialPinchDistance;
       let newZoom = initialZoomState * scale;
 
-      // Batasi zoom agar tidak terlalu kecil (0.5x) atau besar (2.0x)
       newZoom = Math.max(0.5, Math.min(newZoom, 2.0));
-
-      // Terapkan zoom ke UI
-      UIManager.setZoom(newZoom);
+      UIManager.setZoom(newZoom); //
     }
   }, { passive: false });
 
   canvasWrapper.addEventListener('touchend', (e) => {
-    // 3. Reset state cubitan jika jari diangkat
+    // 3. Reset jarak cubitan jika jari berkurang dari 2
     if (e.touches.length < 2) {
       initialPinchDistance = null;
     }
 
-    // 4. Deteksi Double-Tap (Ketuk Dua Kali) untuk Reset Zoom
-    if (e.changedTouches.length === 1) {
+    // 4. Deteksi Double-Tap HANYA saat semua jari sudah terangkat (touches.length === 0)
+    if (e.touches.length === 0) {
+      // Jika sentuhan sebelumnya adalah cubitan, blokir Double-Tap lalu reset penanda
+      if (wasMultiTouch) {
+        wasMultiTouch = false;
+        return; 
+      }
+
+      // Logika Double-Tap murni (1 jari)
       const currentTime = new Date().getTime();
       const tapLength = currentTime - lastTapTime;
       
-      // Jika jeda ketukan kurang dari 300ms (Double Tap)
       if (tapLength < 300 && tapLength > 0) {
-        // Jangan reset zoom jika yang diklik adalah komponen atau tombol
         if (!e.target.closest('.circuit-component') && 
             !e.target.closest('.btn') && 
             !e.target.closest('button')) {
-          UIManager.setZoom(1); // Kembalikan ke 100%
+          UIManager.setZoom(1); //
           e.preventDefault();
         }
       }
@@ -2224,4 +2229,5 @@ function initTouchZoom() {
 document.addEventListener('DOMContentLoaded', () => {
   initTouchZoom();
 });
+
 window.addEventListener('DOMContentLoaded', init);

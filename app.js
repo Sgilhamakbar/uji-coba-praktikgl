@@ -1077,20 +1077,45 @@ const SimulationEngine = {
     });
   }
 };
-// ============================================================
 // File: src/ui/UIManager.js
 
 const UIManager = {
   currentZoom: 1,
 
-  setZoom(val) {
-    this.currentZoom = parseFloat(val);
+setZoom(val, clientX = null, clientY = null) {
     const canvas = document.getElementById('canvas');
-    if (canvas) canvas.style.transform = `scale(${this.currentZoom})`;
+    const wrapper = document.getElementById('canvas-wrapper');
+    if (!canvas || !wrapper) return;
+
+    const oldZoom = this.currentZoom;
+    const newZoom = Math.max(0.5, Math.min(parseFloat(val), 2.0));
+    this.currentZoom = newZoom;
+
+    const rect = wrapper.getBoundingClientRect();
+    
+    // Jika posisi kursor/jari tidak diberikan (misal klik tombol + / - dari UI), 
+    // gunakan titik tengah area wrapper sebagai pusat zoom otomatis
+    if (clientX === null || clientY === null) {
+      clientX = rect.left + rect.width / 2;
+      clientY = rect.top + rect.height / 2;
+    }
+
+    // 1. Hitung posisi absolut titik yang ditunjuk di dalam canvas sebelum zoom berubah
+    const canvasX = (wrapper.scrollLeft + clientX - rect.left) / oldZoom;
+    const canvasY = (wrapper.scrollTop + clientY - rect.top) / oldZoom;
+
+    // 2. Terapkan skala perbesaran baru pada elemen kanvas
+    canvas.style.transform = `scale(${newZoom})`;
+
+    // 3. Sesuaikan posisi scroll wrapper agar titik koordinat tetap diam tepat di bawah kursor/jari
+    wrapper.scrollLeft = canvasX * newZoom - (clientX - rect.left);
+    wrapper.scrollTop = canvasY * newZoom - (clientY - rect.top);
+
+    // Update label persen dan slider di UI toolbar
     const zoomLabel = document.getElementById('zoomLabel');
-    if (zoomLabel) zoomLabel.innerText = Math.round(this.currentZoom * 100) + '%';
+    if (zoomLabel) zoomLabel.innerText = Math.round(newZoom * 100) + '%';
     const zoomSlider = document.getElementById('zoomSlider');
-    if (zoomSlider) zoomSlider.value = this.currentZoom;
+    if (zoomSlider) zoomSlider.value = newZoom;
   },
 
   changeZoom(delta) {
@@ -1303,7 +1328,6 @@ const UIManager = {
     if (truthModal) truthModal.classList.remove('show'); 
   }
 };
-// ============================================================
 // File: main.js
 
 // ─── Penghubung Tombol HTML ke Modul ──────────────────────────────────────────
@@ -2151,35 +2175,36 @@ function init() {
     }, 300);
   }
 }
-// ─── FITUR PINCH-TO-ZOOM & DOUBLE TAP (LAYAR SENTUH) ──────────────────────────
+
+// ─── FITUR SMART ZOOM (PINCH-TO-ZOOM & MOUSE WHEEL CONTROL) ──────────────────
 
 let initialPinchDistance = null;
 let initialZoomState = 1;
 let lastTapTime = 0;
-let wasMultiTouch = false; // Penanda apakah user sedang mencubit
+let wasMultiTouch = false;
 
-function initTouchZoom() {
+function initSmartZoom() {
   const canvasWrapper = document.getElementById('canvas-wrapper');
   if (!canvasWrapper) return;
 
+  // A. PINCH-TO-ZOOM (Layar Sentuh Tablet/HP)
   canvasWrapper.addEventListener('touchstart', (e) => {
-    // 1. Jika ada lebih dari 1 jari, tandai sebagai Multi-Touch
     if (e.touches.length > 1) {
       wasMultiTouch = true;
       if (e.touches.length === 2) {
+        // Hitung jarak awal antara kedua jari
         initialPinchDistance = Math.hypot(
           e.touches[0].clientX - e.touches[1].clientX,
           e.touches[0].clientY - e.touches[1].clientY
         );
-        initialZoomState = UIManager.currentZoom; //
+        initialZoomState = UIManager.currentZoom;
       }
     }
   }, { passive: false });
 
   canvasWrapper.addEventListener('touchmove', (e) => {
-    // 2. Eksekusi Zoom saat 2 Jari Bergerak
     if (e.touches.length === 2 && initialPinchDistance) {
-      e.preventDefault(); 
+      e.preventDefault(); // Cegah pergeseran halaman bawaan browser
       
       const currentDistance = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
@@ -2189,45 +2214,56 @@ function initTouchZoom() {
       const scale = currentDistance / initialPinchDistance;
       let newZoom = initialZoomState * scale;
 
-      newZoom = Math.max(0.5, Math.min(newZoom, 2.0));
-      UIManager.setZoom(newZoom); //
+      // Ambil titik tengah di antara posisi kedua jari sebagai pusat target zoom
+      const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+
+      UIManager.setZoom(newZoom, midX, midY);
     }
   }, { passive: false });
 
   canvasWrapper.addEventListener('touchend', (e) => {
-    // 3. Reset jarak cubitan jika jari berkurang dari 2
     if (e.touches.length < 2) {
       initialPinchDistance = null;
     }
 
-    // 4. Deteksi Double-Tap HANYA saat semua jari sudah terangkat (touches.length === 0)
     if (e.touches.length === 0) {
-      // Jika sentuhan sebelumnya adalah cubitan, blokir Double-Tap lalu reset penanda
       if (wasMultiTouch) {
         wasMultiTouch = false;
-        return; 
+        return;
       }
 
-      // Logika Double-Tap murni (1 jari)
+      // UX Tambahan: Double Tap di area kosong untuk reset cepat ke 100%
       const currentTime = new Date().getTime();
       const tapLength = currentTime - lastTapTime;
-      
       if (tapLength < 300 && tapLength > 0) {
-        if (!e.target.closest('.circuit-component') && 
-            !e.target.closest('.btn') && 
-            !e.target.closest('button')) {
-          UIManager.setZoom(1); //
+        if (!e.target.closest('.circuit-component') && !e.target.closest('button')) {
+          const t = e.changedTouches[0];
+          UIManager.setZoom(1, t.clientX, t.clientY);
           e.preventDefault();
         }
       }
       lastTapTime = currentTime;
     }
   });
+
+  // B. MOUSE WHEEL ZOOM (Laptop/Desktop)
+  // Meniru UX software profesional: Tekan tombol "Ctrl" + Scroll Mouse untuk Zoom In/Out ke kursor
+  canvasWrapper.addEventListener('wheel', (e) => {
+    if (e.ctrlKey) {
+      e.preventDefault();
+      const delta = e.deltaY < 0 ? 0.05 : -0.05;
+      let newZoom = UIManager.currentZoom + delta;
+      
+      // Kirim koordinat e.clientX & e.clientY agar berpusat pada ujung kursor mouse
+      UIManager.setZoom(newZoom, e.clientX, e.clientY);
+    }
+  }, { passive: false });
 }
 
-// Panggil fungsi ini saat inisialisasi
+// Daftarkan ke inisialisasi DOM
 document.addEventListener('DOMContentLoaded', () => {
-  initTouchZoom();
+  initSmartZoom();
 });
 
 window.addEventListener('DOMContentLoaded', init);

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Lab Rangkaian Digital - Build Your Own Circuit V18.2 (Fixed)</title>
+  
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<div class="toast-container" id="toastContainer"></div>
+<input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="handleFileImport(event)">
+<div class="app-container">
+
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+      Lab Otomotif &amp; Digital V18.2
+    </div>
+
+    <div class="sidebar-section">
+      <h4>Digital Input / Output</h4>
+      <div class="component-card" draggable="true" data-type="switch" data-inputs="0" data-outputs="1">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="1" y="5" width="22" height="14" rx="7" ry="7"></rect><circle cx="8" cy="12" r="3"></circle></svg></div>
+        <div class="comp-info"><div class="comp-name">Switch Digital</div><div class="comp-desc">Logika 1/0 (5V/0V)</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="led" data-inputs="1" data-outputs="1">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1.45.62 2.84 1.5 3.5.76.75 1.23 1.51 1.41 2.5"/></svg></div>
+        <div class="comp-info"><div class="comp-name">LED Indikator</div><div class="comp-desc">Lampu Beban</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="diode" data-inputs="1" data-outputs="1">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 12h4m16 0h-4M6 4l12 8-12 8zM18 4v16"/></svg></div>
+        <div class="comp-info"><div class="comp-name">Dioda Penyearah</div><div class="comp-desc">Penyearah Arus DC</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="transformer" data-inputs="2" data-outputs="3">
+        <div class="comp-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 4v16 M18 4v16 M12 2v20 M14 2v20"/>
+          </svg>
+        </div>
+        <div class="comp-info"><div class="comp-name">Transformator</div><div class="comp-desc">Trafo 2P3S (CT)</div></div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <h4>Daya &amp; Proteksi (DC)</h4>
+      <div class="component-card" draggable="true" data-type="battery" data-inputs="0" data-outputs="2">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="6" y="8" width="12" height="12" rx="2"/><path d="M8 8V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg></div>
+        <div class="comp-info"><div class="comp-name">Baterai 12V</div><div class="comp-desc">Sumber Tegangan DC</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="fuse" data-inputs="1" data-outputs="1">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 12h5l2-5 2 10 2-5h5"/><rect x="2" y="6" width="20" height="12" rx="2"/></svg></div>
+        <div class="comp-info"><div class="comp-name">Sekering (Fuse)</div><div class="comp-desc">Proteksi Arus (A)</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="ground" data-inputs="1" data-outputs="0">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v10M4 12h16M7 16h10M10 20h4"/></svg></div>
+        <div class="comp-info"><div class="comp-name">Ground Massa</div><div class="comp-desc">0V Referensi</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="switch_spst" data-inputs="1" data-outputs="1">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="5" y1="12" x2="9" y2="12"/><line x1="15" y1="12" x2="19" y2="12"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><line x1="9" y1="12" x2="14" y2="8"/></svg></div>
+        <div class="comp-info"><div class="comp-name">Saklar Mekanis</div><div class="comp-desc">Pemutus Arus ON/OFF</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="relay" data-inputs="2" data-outputs="2">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><line x1="4" y1="12" x2="20" y2="12"></line><circle cx="12" cy="8" r="2"></circle><circle cx="12" cy="16" r="2"></circle></svg></div>
+        <div class="comp-info"><div class="comp-name">Relay 4 Kaki</div><div class="comp-desc">Saklar Elektromagnetik</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="resistor" data-inputs="1" data-outputs="1">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linejoin="round"><path d="M2 12h3l2.5-5 5 10 5-10 2.5 5h3"/></svg></div>
+        <div class="comp-info"><div class="comp-name">Resistor</div><div class="comp-desc">Hambatan (Ohm)</div></div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <h4>Sensor &amp; Input Analog</h4>
+      <div class="component-card" draggable="true" data-type="ldr" data-inputs="1" data-outputs="1">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M10 12h4 M8 8l2 2 M8 16l2-2"/></svg></div>
+        <div class="comp-info"><div class="comp-name">Sensor LDR</div><div class="comp-desc">Resistor Cahaya</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="thermistor_ntc" data-inputs="1" data-outputs="1">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="6"/><path d="M4 18h3l9-13"/></svg></div>
+        <div class="comp-info"><div class="comp-name">Thermistor NTC</div><div class="comp-desc">Suhu Naik, R Turun</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="thermistor_ptc" data-inputs="1" data-outputs="1">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="6"/><path d="M4 18h3l9-13"/></svg></div>
+        <div class="comp-info"><div class="comp-name">Thermistor PTC</div><div class="comp-desc">Suhu Naik, R Naik</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="potentiometer" data-inputs="2" data-outputs="1">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16 M12 6v6 M9 9l3-3 3 3"/></svg></div>
+        <div class="comp-info"><div class="comp-name">Potensiometer</div><div class="comp-desc">Resistor Variabel</div></div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <h4>Aktuator &amp; Output</h4>
+      <div class="component-card" draggable="true" data-type="motor_dc" data-inputs="1" data-outputs="1">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><text x="12" y="16" text-anchor="middle" font-size="10" font-weight="bold">M</text></svg></div>
+        <div class="comp-info"><div class="comp-name">Motor DC</div><div class="comp-desc">Motor Putar (RPM)</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="servo" data-inputs="3" data-outputs="0">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="8" width="16" height="12" rx="2"/><circle cx="12" cy="8" r="4"/><path d="M12 4v4"/></svg></div>
+        <div class="comp-info"><div class="comp-name">Servo Motor</div><div class="comp-desc">Penggerak Sudut</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="solenoid" data-inputs="1" data-outputs="1">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="2"/><line x1="12" y1="6" x2="12" y2="2"/></svg></div>
+        <div class="comp-info"><div class="comp-name">Solenoid Valve</div><div class="comp-desc">Katup Elektrik</div></div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <h4>Gerbang Logika</h4>
+      <div class="component-card" draggable="true" data-type="and" data-inputs="2" data-outputs="1">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4h8a8 8 0 0 1 8 8 8 8 0 0 1-8 8H4z"/><path d="M4 8h-2m2 8h-2m18-4h2"/></svg></div>
+        <div class="comp-info"><div class="comp-name">AND Gate</div><div class="comp-desc">IC 7408</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="or" data-inputs="2" data-outputs="1">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4c6 0 12 2 16 8-4 6-10 8-16 8 2-5 2-11 0-16z"/><path d="M4 8h-2m2 8h-2m18-4h2"/></svg></div>
+        <div class="comp-info"><div class="comp-name">OR Gate</div><div class="comp-desc">IC 7432</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="not" data-inputs="1" data-outputs="1">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4l12 8-12 8z"/><circle cx="18" cy="12" r="2"/><path d="M4 12h-2m18 0h2"/></svg></div>
+        <div class="comp-info"><div class="comp-name">NOT Gate</div><div class="comp-desc">IC 7404</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="nand" data-inputs="2" data-outputs="1">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4h6a6 6 0 0 1 6 6 6 6 0 0 1-6 6H4z"/><circle cx="18" cy="12" r="2"/><path d="M4 8h-2m2 8h-2m18-4h2"/></svg></div>
+        <div class="comp-info"><div class="comp-name">NAND Gate</div><div class="comp-desc">IC 7400</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="nor" data-inputs="2" data-outputs="1">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4c4 0 10 2 12 8-2 6-8 8-12 8 2-5 2-11 0-16z"/><circle cx="18" cy="12" r="2"/><path d="M4 8h-2m2 8h-2m18-4h2"/></svg></div>
+        <div class="comp-info"><div class="comp-name">NOR Gate</div><div class="comp-desc">IC 7402</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="xor" data-inputs="2" data-outputs="1">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M8 4c6 0 12 2 16 8-4 6-10 8-16 8 2-5 2-11 0-16z"/><path d="M4 4c2 5 2 11 0 16"/><path d="M8 8h-6m6 8h-6m18-4h2"/></svg></div>
+        <div class="comp-info"><div class="comp-name">XOR Gate</div><div class="comp-desc">IC 7486</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="xnor" data-inputs="2" data-outputs="1">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 4c4 0 10 2 12 8-2 6-8 8-12 8 2-5 2-11 0-16z"/><path d="M2 4c2 5 2 11 0 16"/><circle cx="20" cy="12" r="2"/><path d="M6 8H2m4 8H2m20-4h2"/></svg></div>
+        <div class="comp-info"><div class="comp-name">XNOR Gate</div><div class="comp-desc">IC 74266</div></div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <h4>Kabel &amp; Pasif</h4>
+      <div class="component-card" draggable="true" data-type="wire_1to1" data-inputs="1" data-outputs="1">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="4" y1="12" x2="20" y2="12"/><circle cx="4" cy="12" r="1"/><circle cx="20" cy="12" r="1"/></svg></div>
+        <div class="comp-info"><div class="comp-name">Kabel Ekstensi</div><div class="comp-desc">Sambungan lurus</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="wire_1to2" data-inputs="1" data-outputs="2">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 12h8v-6h8 M12 12v6h8"/><circle cx="4" cy="12" r="1"/><circle cx="20" cy="6" r="1"/><circle cx="20" cy="18" r="1"/></svg></div>
+        <div class="comp-info"><div class="comp-name">Kabel Cabang 2</div><div class="comp-desc">1 In, 2 Out</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="junction" data-inputs="1" data-outputs="3">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M12 2v7m0 6v7m-10-10h7m6 0h7"/></svg></div>
+        <div class="comp-info"><div class="comp-name">Node Cabang 3</div><div class="comp-desc">Bagi 1 ke 3 arah</div></div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <h4>Semikonduktor &amp; Analog</h4>
+      <div class="component-card" draggable="true" data-type="bjt_npn" data-inputs="2" data-outputs="1">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><line x1="7" y1="12" x2="11" y2="12"></line><line x1="11" y1="7" x2="11" y2="17"></line><line x1="11" y1="9" x2="16" y2="6"></line><line x1="11" y1="15" x2="16" y2="18"></line></svg></div>
+        <div class="comp-info"><div class="comp-name">Transistor NPN</div><div class="comp-desc">BJT Saklar / Penguat</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="bjt_pnp" data-inputs="2" data-outputs="1">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><line x1="7" y1="12" x2="11" y2="12"></line><line x1="11" y1="7" x2="11" y2="17"></line><line x1="11" y1="9" x2="16" y2="6"></line><line x1="11" y1="15" x2="16" y2="18"></line></svg></div>
+        <div class="comp-info"><div class="comp-name">Transistor PNP</div><div class="comp-desc">BJT Saklar (Aktif Low)</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="mosfet_n" data-inputs="2" data-outputs="1">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><line x1="7" y1="9" x2="7" y2="15"></line><line x1="7" y1="12" x2="11" y2="12"></line><line x1="11" y1="7" x2="11" y2="17"></line><line x1="11" y1="7" x2="16" y2="7"></line><line x1="11" y1="17" x2="16" y2="17"></line></svg></div>
+        <div class="comp-info"><div class="comp-name">MOSFET N-Ch</div><div class="comp-desc">Power Switch High-Side</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="mosfet_p" data-inputs="2" data-outputs="1">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><line x1="7" y1="9" x2="7" y2="15"></line><line x1="7" y1="12" x2="11" y2="12"></line><line x1="11" y1="7" x2="11" y2="17"></line><line x1="11" y1="7" x2="16" y2="7"></line><line x1="11" y1="17" x2="16" y2="17"></line></svg></div>
+        <div class="comp-info"><div class="comp-name">MOSFET P-Ch</div><div class="comp-desc">Power Switch Low-Side</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="opamp" data-inputs="2" data-outputs="1">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="6,4 18,12 6,20"></polygon></svg></div>
+        <div class="comp-info"><div class="comp-name">Op-Amp 741</div><div class="comp-desc">Komparator / Penguat</div></div>
+      </div>
+    </div>
+    <div class="sidebar-section">
+      <h4>Alat Ukur</h4>
+      <div class="component-card" draggable="true" data-type="voltmeter" data-inputs="2" data-outputs="0">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="8"/><path d="M10 9l2 6 2-6"/></svg></div>
+        <div class="comp-info"><div class="comp-name">Voltmeter</div><div class="comp-desc">Ukur Tegangan (V)</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="ammeter" data-inputs="1" data-outputs="1">
+        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="8"/><path d="M10 15l2-6 2 6 M11 12h2"/></svg></div>
+        <div class="comp-info"><div class="comp-name">Amperemeter</div><div class="comp-desc">Ukur Arus (A)</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="canvas-container">
+    <div class="toolbar">
+      <button class="btn btn-primary" id="btnSimulate" onclick="toggleSimulation()">
+        <span class="status-indicator status-ready" id="simIndicator"></span>
+        <span id="simText" style="display:flex; align-items:center; gap:6px;">
+          <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Mulai Simulasi
+        </span>
+      </button>
+      <button class="btn btn-danger" onclick="clearCanvas()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Clear
+      </button>
+      <button class="btn btn-info" onclick="showTruthTable()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg> Tabel
+      </button>
+      <button class="btn btn-secondary" id="btnUndo" onclick="undo()" disabled title="Undo (Ctrl+Z)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+      </button>
+      <button class="btn btn-secondary" id="btnRedo" onclick="redo()" disabled title="Redo (Ctrl+Y)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.13-9.36L23 10"></path></svg>
+      </button>
+      <button class="btn btn-success" onclick="exportCircuit()" title="Simpan ke file">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+      </button>
+      <button class="btn btn-success" onclick="importCircuit()" title="Muat dari file">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+      </button>
+
+      <div style="margin-left: auto; display: flex; gap: 10px; align-items: center;">
+        <div class="zoom-controls">
+          <button class="zoom-btn" onclick="changeZoom(-0.1)">-</button>
+          <input type="range" id="zoomSlider" min="0.5" max="2" step="0.1" value="1" oninput="setZoom(this.value)">
+          <button class="zoom-btn" onclick="changeZoom(0.1)">+</button>
+          <span id="zoomLabel">100%</span>
+        </div>
+        <button class="btn-theme" onclick="toggleTheme()" id="btnTheme" title="Ganti Tema">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="canvas-wrapper">
+      <div id="selection-box"></div>
+      <div id="canvas">
+        <div id="wire-overlay">
+          <svg id="wire-svg" viewBox="0 0 3000 3000" width="3000" height="3000"></svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="valueModal">
+  <div class="modal-content">
+    <h2><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20V10M18 20V4M6 20v-4"/></svg> Atur Nilai Komponen</h2>
+    <p>Komponen: <strong id="valCompName" style="color:var(--primary)">C1</strong></p>
+    <div class="resistor-input-group">
+      <input type="number" id="compValue" min="0.1" max="10000000" step="0.1" placeholder="Nilai">
+      <select id="compUnit"></select>
+    </div>
+    <p style="font-size: 12px; color: var(--text-muted);">Nilai saat ini: <strong id="valCurrent"></strong></p>
+
+    <div id="fusePresets" style="display:none;">
+      <h3>Kapasitas Sekering (A):</h3>
+      <div class="preset-buttons">
+        <button class="preset-btn" onclick="setPresetValue(5, 1)">5 A</button>
+        <button class="preset-btn" onclick="setPresetValue(7.5, 1)">7.5 A</button>
+        <button class="preset-btn" onclick="setPresetValue(10, 1)">10 A</button>
+        <button class="preset-btn" onclick="setPresetValue(15, 1)">15 A</button>
+        <button class="preset-btn" onclick="setPresetValue(20, 1)">20 A</button>
+        <button class="preset-btn" onclick="setPresetValue(30, 1)">30 A</button>
+      </div>
+    </div>
+    <div id="resistorPresets" style="display:none;">
+      <h3>Hambatan Umum:</h3>
+      <div class="preset-buttons">
+        <button class="preset-btn" onclick="setPresetValue(10, 1)">10 Ω</button>
+        <button class="preset-btn" onclick="setPresetValue(100, 1)">100 Ω</button>
+        <button class="preset-btn" onclick="setPresetValue(330, 1)">330 Ω</button>
+        <button class="preset-btn" onclick="setPresetValue(1, 1000)">1 kΩ</button>
+        <button class="preset-btn" onclick="setPresetValue(10, 1000)">10 kΩ</button>
+      </div>
+    </div>
+
+    <br>
+    <button class="btn btn-primary" onclick="saveComponentValue()" style="width:100%; justify-content:center;">Simpan</button>
+    <button class="btn btn-secondary" onclick="closeValueModal()" style="width:100%; margin-top:8px; justify-content:center; background:var(--control-bg); color:var(--text-main);">Batal</button>
+  </div>
+</div>
+
+<div class="modal" id="truthModal">
+  <div class="modal-content" style="max-width: 600px;">
+    <h2><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg> Tabel Kebenaran</h2>
+    <div style="overflow-x: auto;"><table class="truth-table" id="modal-truth-table"><thead></thead><tbody></tbody></table></div>
+    <br>
+    <button class="btn btn-primary" onclick="closeTruthTable()" style="width:100%; justify-content:center;">Tutup</button>
+  </div>
+</div>
+
+<script src="src/components/ComponentDefs.js"></script>
+<script src="src/HistoryManager.js"></script>
+<script src="src/state/CircuitStore.js"></script>
+<script src="src/engine/SimulationEngine.js"></script>
+<script src="src/ui/UIManager.js"></script>
+<script src="main.js"></script>
+</body>
+</html>

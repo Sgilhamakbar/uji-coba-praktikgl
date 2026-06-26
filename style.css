@@ -140,8 +140,10 @@ body {
 @keyframes pulse { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.4); } 50% { opacity: 0.6; box-shadow: 0 0 0 4px rgba(255, 193, 7, 0); } }
 
 #canvas-wrapper {
-  flex: 1; position: relative; overflow: auto;
-  background: var(--bg-body); touch-action: pan-x pan-y;
+  flex: 1; position: relative; 
+  overflow: auto; /* MENGUNCI SCROLLBAR */
+  background: var(--bg-body); 
+  touch-action: none;
 }
 #canvas {
   width: 3000px; height: 3000px;
@@ -224,10 +226,80 @@ body {
 .connection-point.pending { box-shadow: 0 0 10px rgba(34,197,94,0.8); background: #22c55e; transform: translate(-50%, -50%) scale(1.3); }
 .leg-active { stroke: var(--success) !important; }
 
-.toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 10000; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
-.toast { background: var(--toast-bg); color: var(--toast-text); padding: 12px 20px; border-radius: var(--radius); font-size: 13px; font-weight: 500; box-shadow: var(--box-shadow); animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1), fadeOut 0.3s ease 2.5s forwards; max-width: 400px; white-space: normal; word-wrap: break-word; pointer-events: none; line-height: 1.4; display: flex; align-items: center; gap: 8px; }
-@keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-@keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+/* --- POSISI WADAH NOTIFIKASI DI POJOK KANAN BAWAH --- */
+.toast-container {
+    position: fixed;
+    bottom: 24px; /* Jarak dari bawah layar */
+    right: 24px;  /* Jarak dari kanan layar */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end; /* Rata kanan */
+    gap: 12px;
+    pointer-events: none;
+    z-index: 10000;
+}
+
+/* --- BENTUK KAPSUL TIRAI --- */
+.toast {
+    background: var(--toast-bg);
+    color: var(--toast-text);
+    padding: 12px 20px;
+    border-radius: 40px; 
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    
+    /* Panggil animasi */
+    animation: islandOpen 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, 
+               islandClose 0.4s cubic-bezier(0.4, 0, 0.2, 1) 2.6s forwards;
+               
+    max-width: 400px;
+    white-space: nowrap; 
+    overflow: hidden;    
+    transform-origin: right center; /* 🟢 RAHASIA: Titik jangkar ada di kanan, sehingga mekar ke kiri */
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* --- KEYFRAMES TIRAI MEMBUKA KE KIRI --- */
+@keyframes islandOpen {
+    0% { 
+        max-width: 0px; 
+        padding-left: 0px; 
+        padding-right: 0px; 
+        opacity: 0; 
+        transform: scale(0.85); 
+    }
+    30% { opacity: 1; }
+    100% { 
+        max-width: 400px; 
+        padding-left: 20px; 
+        padding-right: 20px; 
+        opacity: 1; 
+        transform: scale(1); 
+    }
+}
+
+/* --- KEYFRAMES TIRAI MENGGULUNG KEMBALI KE KANAN --- */
+@keyframes islandClose {
+    0% { 
+        max-width: 400px; 
+        padding-left: 20px; 
+        padding-right: 20px; 
+        opacity: 1; 
+        transform: scale(1); 
+    }
+    60% { opacity: 1; }
+    100% { 
+        max-width: 0px; 
+        padding-left: 0px; 
+        padding-right: 0px; 
+        opacity: 0; 
+        transform: scale(0.85); 
+    }
+}
 
 .confirm-toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--toast-bg); color: var(--toast-text); padding: 16px 24px; border-radius: var(--radius); font-size: 14px; font-weight: 600; z-index: 10001; pointer-events: auto; display: flex; gap: 12px; align-items: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
 .confirm-toast button { padding: 6px 14px; border: 1px solid var(--border-color); background: var(--bg-container); color: var(--text-main); border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; }
@@ -266,4 +338,68 @@ body {
   .toolbar { padding: 10px; gap: 6px; overflow-x: auto; flex-wrap: nowrap; }
   .btn { padding: 6px 10px; font-size: 11px; }
   .zoom-controls { margin-left: 0; }
+}
+/* ─── TOMBOL ROTASI KOMPONEN (FLOATING) ─── */
+.circuit-component .rotate-btn {
+  position: absolute;
+  top: -8px;
+  left: -8px; 
+  width: 22px;
+  height: 22px;
+  background: var(--primary);
+  color: white;
+  border: 2px solid var(--bg-body);
+  border-radius: 50%;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 101;
+  transition: all 0.2s;
+  padding: 0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.circuit-component[data-type="wire_1to1"] .rotate-btn,
+.circuit-component[data-type="wire_1to2"] .rotate-btn,
+.circuit-component[data-type="junction"] .rotate-btn { top: -12px; left: calc(50% - 11px); }
+.circuit-component .rotate-btn:hover {
+  background: var(--primary-hover);
+  transform: scale(1.15);
+}
+.circuit-component .rotate-btn:active {
+  transform: scale(0.95);
+}
+/* ─── MENYEMBUNYIKAN TOMBOL HAPUS & ROTASI SECARA DEFAULT ─── */
+.circuit-component .delete-btn,
+.circuit-component .rotate-btn {
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(0.5);
+  pointer-events: none;
+  /* Animasi transisi yang halus dan sedikit membal */
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), visibility 0.2s;
+}
+
+/* ─── MEMUNCULKAN TOMBOL HANYA SAAT KOMPONEN DIPILIH (SELECTED) ─── */
+.circuit-component.selected .delete-btn,
+.circuit-component.selected .rotate-btn {
+  opacity: 1;
+  visibility: visible;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+/* ─── MEMASTIKAN EFEK HOVER TETAP BERFUNGSI SAAT TOMBOL MUNCUL ─── */
+.circuit-component.selected .delete-btn:hover,
+.circuit-component.selected .rotate-btn:hover {
+  transform: scale(1.15); /* Membesar sedikit saat disentuh/di-hover */
+}
+
+.circuit-component.selected .delete-btn:active,
+.circuit-component.selected .rotate-btn:active {
+  transform: scale(0.95); /* Mengecil saat ditekan */
+}
+/* ─── ANIMASI MOTOR DC ─── */
+@keyframes motorSpin {
+  100% { transform: rotate(360deg); }
 }

@@ -1413,20 +1413,17 @@ const SimulationEngine = {
         cluster.forEach(c => {
             if (c.type === 'potentiometer') {
                 let pIn0 = `c${c.id}_in0`; let pIn1 = `c${c.id}_in1`;
-                if (highNet.has(pIn0) && lowNet.has(pIn1)) {
-                    let ratio = parseInt(c.state || '50') / 100;
-                    let baseV = globalNodeVoltages.get(pIn0) || sourceVoltage;
-                    let wiperV = baseV * ratio;
-                    let pOut0 = `c${c.id}_out0`; 
-                    if (wiperV > 0) { strictSources.add(pOut0); qHigh.push(pOut0); localNodeVoltages.set(pOut0, wiperV); analogAdded = true; }
-                }
-                else if (highNet.has(pIn1) && lowNet.has(pIn0)) {
-                    let ratio = parseInt(c.state || '50') / 100;
-                    let baseV = globalNodeVoltages.get(pIn1) || sourceVoltage;
-                    let wiperV = baseV * (1 - ratio);
-                    let pOut0 = `c${c.id}_out0`;
-                    if (wiperV > 0) { strictSources.add(pOut0); qHigh.push(pOut0); localNodeVoltages.set(pOut0, wiperV); analogAdded = true; }
-                }
+                let ratio = parseInt(c.state || '50') / 100;
+                let wiperV = 0;
+                
+                if (highNet.has(pIn0) && lowNet.has(pIn1)) { wiperV = (globalNodeVoltages.get(pIn0) || sourceVoltage) * ratio; }
+                else if (highNet.has(pIn1) && lowNet.has(pIn0)) { wiperV = (globalNodeVoltages.get(pIn1) || sourceVoltage) * (1 - ratio); }
+                // 🟢 MAGIC FALLBACK: Jika pengguna lupa/sengaja tidak memasang Ground ke Potensiometer
+                else if (highNet.has(pIn0)) { wiperV = (globalNodeVoltages.get(pIn0) || sourceVoltage) * ratio; } 
+                else if (highNet.has(pIn1)) { wiperV = (globalNodeVoltages.get(pIn1) || sourceVoltage) * (1 - ratio); } 
+                
+                let pOut0 = `c${c.id}_out0`; 
+                if (wiperV > 0) { strictSources.add(pOut0); qHigh.push(pOut0); localNodeVoltages.set(pOut0, wiperV); analogAdded = true; }
             }
             else if (['ldr', 'thermistor_ntc', 'thermistor_ptc'].includes(c.type)) {
                 let pIn0 = `c${c.id}_in0`;

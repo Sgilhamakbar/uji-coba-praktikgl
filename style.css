@@ -144,6 +144,7 @@ body {
   overflow: auto; /* MENGUNCI SCROLLBAR */
   background: var(--bg-body); 
   touch-action: none;
+  overscroll-behavior: none; /* Blokir gestur bawaan OS (mis. pull-to-refresh iOS) saat scroll mentok */
 }
 #canvas {
   width: 3000px; height: 3000px;
@@ -398,8 +399,4 @@ body {
 .circuit-component.selected .delete-btn:active,
 .circuit-component.selected .rotate-btn:active {
   transform: scale(0.95); /* Mengecil saat ditekan */
-}
-/* ─── ANIMASI MOTOR DC ─── */
-@keyframes motorSpin {
-  100% { transform: rotate(360deg); }
 }

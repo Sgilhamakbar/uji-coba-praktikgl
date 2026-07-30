@@ -16,10 +16,57 @@
     <div class="sidebar-header">
       <div class="sidebar-title">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-        <span>Lab V18.2</span>
+        <span>Simulasi Listrik</span>
       </div>
     </div>
-    
+    <!-- KOTAK PENCARIAN & FILTER-->
+    <div class="sidebar-search" style="padding: 12px 15px; position: relative; border-bottom: 1px solid var(--border, #334155); background: var(--bg-main, #0f172a);">
+      
+      <!-- Kapsul Input Group -->
+      <div style="display: flex; align-items: center; background: var(--control-bg, #1e293b); border: 1px solid var(--border, #334155); border-radius: 6px; padding: 4px 10px; transition: all 0.2s;">
+        
+        <!-- Ikon Kaca Pembesar -->
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--text-muted, #94a3b8)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; flex-shrink: 0;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        
+        <!-- Input Teks (Ukuran 12px) -->
+        <input type="text" id="componentSearch" placeholder="Cari komponen..." style="width: 100%; border: none; background: transparent; color: var(--text-main, #f8fafc); font-size: 12px; outline: none; padding: 4px 0;">
+        
+        <!-- Tombol X (Silang) -->
+        <button id="clearSearchBtn" style="display: none; background: none; border: none; color: var(--text-muted, #94a3b8); cursor: pointer; padding: 2px 4px; flex-shrink: 0;" title="Hapus teks" onmouseover="this.style.color='var(--text-main, #fff)'" onmouseout="this.style.color='var(--text-muted, #94a3b8)'">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+
+        <!-- Garis Pembatas Vertikal -->
+        <div style="width: 1px; height: 14px; background: var(--border, #475569); margin: 0 6px; flex-shrink: 0;"></div>
+        
+        <!-- Tombol Ikon Filter -->
+        <button id="filterToggleBtn" style="background: none; border: none; color: var(--text-muted, #94a3b8); cursor: pointer; padding: 2px; flex-shrink: 0; position: relative;" title="Filter Kategori" onmouseover="this.style.color='var(--primary, #3b82f6)'" onmouseout="if(document.getElementById('filterDropdown').style.display==='none') this.style.color='var(--text-muted, #94a3b8)'">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+          <!-- Titik Biru Penanda Filter Aktif -->
+          <span id="filterActiveDot" style="display: none; position: absolute; top: 0; right: 0; width: 6px; height: 6px; background: var(--primary, #3b82f6); border-radius: 50%;"></span>
+        </button>
+      </div>
+
+      <!-- Popup Dropdown Filter Kategori -->
+      <div id="filterDropdown" style="display: none; position: absolute; top: calc(100% - 5px); right: 15px; background: var(--control-bg, #1e293b); border: 1px solid var(--border, #334155); border-radius: 6px; padding: 8px 0; width: 180px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5); z-index: 100;">
+        <div style="font-size: 10px; color: var(--text-muted, #94a3b8); padding: 0 12px 6px 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Filter Kategori</div>
+        
+        <div style="display: flex; flex-direction: column;">
+          <label style="font-size: 12px; color: var(--text-main, #f8fafc); padding: 6px 12px; cursor: pointer; display: flex; align-items: center;" onmouseover="this.style.background='var(--border, #334155)'" onmouseout="this.style.background='transparent'">
+            <input type="radio" name="catFilter" value="all" checked style="margin-right: 8px; accent-color: var(--primary);"> Semua Komponen
+          </label>
+          <label style="font-size: 12px; color: var(--text-main, #f8fafc); padding: 6px 12px; cursor: pointer; display: flex; align-items: center;" onmouseover="this.style.background='var(--border, #334155)'" onmouseout="this.style.background='transparent'">
+            <input type="radio" name="catFilter" value="digital" style="margin-right: 8px; accent-color: var(--primary);"> Digital & Logika
+          </label>
+          <label style="font-size: 12px; color: var(--text-main, #f8fafc); padding: 6px 12px; cursor: pointer; display: flex; align-items: center;" onmouseover="this.style.background='var(--border, #334155)'" onmouseout="this.style.background='transparent'">
+            <input type="radio" name="catFilter" value="analog" style="margin-right: 8px; accent-color: var(--primary);"> Analog & Daya
+          </label>
+          <label style="font-size: 12px; color: var(--text-main, #f8fafc); padding: 6px 12px; cursor: pointer; display: flex; align-items: center;" onmouseover="this.style.background='var(--border, #334155)'" onmouseout="this.style.background='transparent'">
+            <input type="radio" name="catFilter" value="alat" style="margin-right: 8px; accent-color: var(--primary);"> Alat Ukur
+          </label>
+        </div>
+      </div>
+    </div>
     <div class="sidebar-section">
       <h4>Digital Input / Output</h4>
       <div class="component-card" draggable="true" data-type="switch" data-inputs="0" data-outputs="1">
@@ -54,6 +101,17 @@
         <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 12h4m16 0h-4M6 4l12 8-12 8zM18 4v16"/></svg></div>
         <div class="comp-info"><div class="comp-name">Dioda Penyearah</div><div class="comp-desc">Penyearah Arus DC</div></div>
       </div>
+      <div class="component-card" draggable="true" data-type="diode_bridge" data-inputs="2" data-outputs="2">
+    <div class="comp-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="4" y="4" width="16" height="16" transform="rotate(45 12 12)"></rect>
+      </svg>
+    </div>
+    <div class="comp-info">
+        <div class="comp-name">Dioda Bridge</div>
+        <div class="comp-desc">Penyearah / Pelindung Polaritas</div>
+    </div>
+</div>
       <div class="component-card" draggable="true" data-type="transformer" data-inputs="2" data-outputs="3">
         <div class="comp-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -62,7 +120,19 @@
         </div>
         <div class="comp-info"><div class="comp-name">Transformator</div><div class="comp-desc">Trafo 2P3S (CT)</div></div>
       </div>
-      <div class="component-card" draggable="true" data-type="clock_pulse" data-inputs="0" data-outputs="1">
+      <div class="component-card" draggable="true" data-type="oscilloscope" data-inputs="2" data-outputs="0">
+    <div class="comp-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+            <path d="M2 10h4c1 0 2 2 3 4s2-8 3-8 2 2 3 2h7" stroke="#22c55e" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+    </div>
+    <div class="comp-info" style="gap: 0; line-height: 1;">
+        <span class="comp-name" style="margin-bottom: 0; line-height: 1.2;">Osiloskop (Scope)</span>
+        <span class="comp-desc" style="margin-top: 0; line-height: 1.2;">Grafik Gelombang V/t</span>
+    </div>
+</div>
+<div class="component-card" draggable="true" data-type="clock_pulse" data-inputs="0" data-outputs="1">
         <div class="comp-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="2,12 6,12 10,4 14,20 18,12 22,12"></polyline>
@@ -73,6 +143,18 @@
             <div class="comp-desc">Detak Otomatis 2Hz</div>
         </div>
       </div>
+      <div class="component-card" draggable="true" data-type="vsine" data-inputs="0" data-outputs="2">
+    <div class="comp-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="9"></circle>
+        <path d="M7 12c1.5-4 3.5-4 5 0s3.5 4 5 0"></path>
+      </svg>
+    </div>
+    <div class="comp-info">
+        <div class="comp-name">V-Sine (AC)</div>
+        <div class="comp-desc">Generator Gelombang Sinus</div>
+    </div>
+</div>
     </div>
 
     <div class="sidebar-section">
@@ -85,15 +167,6 @@
           </svg>
         </div>
         <div class="comp-info"><div class="comp-name">Baterai 1 Sel</div><div class="comp-desc">DC 1.5V (Baterai AA)</div></div>
-      </div>
-      <div class="component-card" draggable="true" data-type="switch_3way" data-inputs="1" data-outputs="2">
-        <div class="comp-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="2" y="8" width="20" height="8" rx="4"></rect>
-            <circle cx="12" cy="12" r="3" fill="currentColor"></circle>
-          </svg>
-        </div>
-        <div class="comp-info"><div class="comp-name">Saklar Sein</div><div class="comp-desc">SPDT 3 Arah (L-Off-R)</div></div>
       </div>
       <div class="component-card" draggable="true" data-type="battery_multi" data-inputs="0" data-outputs="2">
         <div class="comp-icon">
@@ -118,6 +191,18 @@
         <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="5" y1="12" x2="9" y2="12"/><line x1="15" y1="12" x2="19" y2="12"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><line x1="9" y1="12" x2="14" y2="8"/></svg></div>
         <div class="comp-info"><div class="comp-name">Saklar Mekanis</div><div class="comp-desc">Pemutus Arus ON/OFF</div></div>
       </div>
+      <div class="component-card" draggable="true" data-type="flasher" data-inputs="1" data-outputs="1">
+    <div class="comp-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="9"></circle>
+        <path d="M12 7v5l3 3"></path>
+      </svg>
+    </div>
+    <div class="comp-info">
+        <div class="comp-name">Flasher</div>
+        <div class="comp-desc">Saklar Kedip Otomatis (~1Hz)</div>
+    </div>
+</div>
       <div class="component-card" draggable="true" data-type="relay" data-inputs="2" data-outputs="2">
         <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><line x1="4" y1="12" x2="20" y2="12"></line><circle cx="12" cy="8" r="2"></circle><circle cx="12" cy="16" r="2"></circle></svg></div>
         <div class="comp-info"><div class="comp-name">Relay 4 Kaki</div><div class="comp-desc">Saklar Elektromagnetik</div></div>
@@ -154,7 +239,6 @@
 
     <div class="sidebar-section">
       <h4>Sirkuit Sekuensial (Flip-Flop)</h4>
-      
       <div class="component-card" draggable="true" data-type="ff_sr" data-inputs="3" data-outputs="2">
         <div class="comp-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -234,15 +318,6 @@
         <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="2"/><line x1="12" y1="6" x2="12" y2="2"/></svg></div>
         <div class="comp-info"><div class="comp-name">Solenoid Valve</div><div class="comp-desc">Katup Elektrik</div></div>
       </div>
-      <div class="component-card" draggable="true" data-type="flasher" data-inputs="1" data-outputs="1">
-        <div class="comp-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="5" y="4" width="14" height="16" rx="2"></rect>
-            <polyline points="12 6 9 12 15 12 12 18"></polyline>
-          </svg>
-        </div>
-        <div class="comp-info"><div class="comp-name">Flasher 12V</div><div class="comp-desc">Pengedip Sein (Pin B & L)</div></div>
-      </div>
     </div>
 
     <div class="sidebar-section">
@@ -291,6 +366,17 @@
         <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M12 2v7m0 6v7m-10-10h7m6 0h7"/></svg></div>
         <div class="comp-info"><div class="comp-name">Node Cabang 3</div><div class="comp-desc">Bagi 1 ke 3 arah</div></div>
       </div>
+      <div class="component-card" draggable="true" data-type="voltage_divider" data-inputs="1" data-outputs="1">
+        <div class="comp-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="4" y="6" width="16" height="12" rx="2"></rect>
+            <line x1="12" y1="6" x2="12" y2="18"></line>
+            <line x1="2" y1="12" x2="6" y2="12"></line>
+            <line x1="18" y1="12" x2="22" y2="12"></line>
+          </svg>
+        </div>
+        <div class="comp-info"><div class="comp-name">Voltage Divider</div><div class="comp-desc">Modul Vout = Vin × R2/(R1+R2)</div></div>
+      </div>
       <div class="component-card" draggable="true" data-type="capacitor" data-inputs="1" data-outputs="1">
         <div class="comp-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -324,6 +410,16 @@
         <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="6,4 18,12 6,20"></polygon></svg></div>
         <div class="comp-info"><div class="comp-name">Op-Amp 741</div><div class="comp-desc">Komparator / Penguat</div></div>
       </div>
+      <div class="component-card" draggable="true" data-type="opamp_5pin" data-inputs="4" data-outputs="1">
+        <div class="comp-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="4,5 20,12 4,19"></polygon>
+            <line x1="12" y1="5" x2="12" y2="2"></line>
+            <line x1="12" y1="19" x2="12" y2="22"></line>
+          </svg>
+        </div>
+        <div class="comp-info"><div class="comp-name">Op-Amp 5-Pin</div><div class="comp-desc">Realistis (V+ dan V-)</div></div>
+      </div>
       <div class="component-card" draggable="true" data-type="ic_555" data-inputs="6" data-outputs="2">
         <div class="comp-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -344,15 +440,6 @@
       <div class="component-card" draggable="true" data-type="ammeter" data-inputs="1" data-outputs="1">
         <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="8"/><path d="M10 15l2-6 2 6 M11 12h2"/></svg></div>
         <div class="comp-info"><div class="comp-name">Amperemeter</div><div class="comp-desc">Ukur Arus (A)</div></div>
-      </div>
-      <div class="component-card" draggable="true" data-type="oscilloscope" data-inputs="2" data-outputs="0">
-        <div class="comp-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="2" y="4" width="20" height="16" rx="2"></rect>
-            <polyline points="4,12 8,12 12,6 16,18 20,12"></polyline>
-          </svg>
-        </div>
-        <div class="comp-info"><div class="comp-name">Osiloskop</div><div class="comp-desc">Grafik Gelombang (V)</div></div>
       </div>
     </div>
   </div>
@@ -412,12 +499,80 @@
 </div>
 
 <div class="modal" id="valueModal">
-  <div class="modal-content">
+  <div class="modal-content" style="position: relative;">
+    <button onclick="closeValueModal()" title="Tutup (Esc)" style="position: absolute; top: 15px; right: 15px; background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex; padding: 4px; border-radius: 4px;" onmouseover="this.style.color='var(--danger)'; this.style.background='var(--control-bg)'" onmouseout="this.style.color='var(--text-muted)'; this.style.background='none'">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
     <h2><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20V10M18 20V4M6 20v-4"/></svg> Atur Nilai Komponen</h2>
     <p>Komponen: <strong id="valCompName" style="color:var(--primary)">C1</strong></p>
     <div id="textInputGroup" class="resistor-input-group" style="display:flex;">
       <input type="number" id="compValue" min="0.1" max="10000000" step="0.1" placeholder="Nilai">
       <select id="compUnit"></select>
+    </div>
+    <div id="ledInputGroup" style="display: none; flex-direction: column; gap: 10px; margin-top: 15px;">
+        <div>
+            <label style="font-size: 12px; color: var(--text-muted);">Forward Voltage (V)</label>
+            <input type="number" id="ledForwardV" step="0.1" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: var(--bg-main); color: var(--text-main);">
+        </div>
+        <div>
+            <label style="font-size: 12px; color: var(--text-muted);">Full Drive Current (mA)</label>
+            <input type="number" id="ledFullDriveI" step="1" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: var(--bg-main); color: var(--text-main);">
+        </div>
+        <div>
+            <label style="font-size: 12px; color: var(--text-muted);">Breakdown Voltage (V)</label>
+            <input type="number" id="ledBreakdownV" step="0.1" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: var(--bg-main); color: var(--text-main);">
+        </div>
+    </div>
+    <!-- Tampilan Khusus Pengaturan Thermistor NTC -->
+    <div id="ntcInputGroup" style="display: none; flex-direction: column; gap: 10px; margin-top: 15px;">
+        <div>
+            <label style="font-size: 12px; color: var(--text-muted);">R25 (Hambatan di 25°C) Ω</label>
+            <input type="number" id="ntcR25" step="1" value="10000" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: var(--bg-main); color: var(--text-main);">
+        </div>
+        <div>
+            <label style="font-size: 12px; color: var(--text-muted);">Nilai Beta (β)</label>
+            <input type="number" id="ntcBeta" step="1" value="3950" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: var(--bg-main); color: var(--text-main);">
+        </div>
+    </div>
+
+    <!-- Tampilan Khusus Pengaturan Thermistor PTC -->
+    <div id="ptcInputGroup" style="display: none; flex-direction: column; gap: 10px; margin-top: 15px;">
+        <div>
+            <label style="font-size: 12px; color: var(--text-muted);">R25 (Hambatan di 25°C) Ω</label>
+            <input type="number" id="ptcR25" step="1" value="100" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: var(--bg-main); color: var(--text-main);">
+        </div>
+        <div>
+            <label style="font-size: 12px; color: var(--text-muted);">Nilai Alpha (α)</label>
+            <input type="number" id="ptcAlpha" step="0.01" value="0.05" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: var(--bg-main); color: var(--text-main);">
+        </div>
+    </div>
+    <div id="motorInputGroup" style="display: none; flex-direction: column; gap: 10px; margin-top: 15px;">
+        <div>
+            <label style="font-size: 12px; color: var(--text-muted);">Rated Voltage (V)</label>
+            <input type="number" id="motorRatedV" step="0.1" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: var(--bg-main); color: var(--text-main);">
+        </div>
+        <div>
+            <label style="font-size: 12px; color: var(--text-muted);">Max RPM (pada Rated Voltage)</label>
+            <input type="number" id="motorMaxRPM" step="1" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: var(--bg-main); color: var(--text-main);">
+        </div>
+        <div>
+            <label style="font-size: 12px; color: var(--text-muted);">Coil Resistance (Ω)</label>
+            <input type="number" id="motorCoilR" step="0.1" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: var(--bg-main); color: var(--text-main);">
+        </div>
+    </div>  
+        <!-- Tampilan Khusus Pengaturan Op-Amp 3-Pin -->
+    <div id="opampInputGroup" style="display: none; flex-direction: column; gap: 10px; margin-top: 15px;">
+        <div>
+            <label style="font-size: 12px; color: var(--text-muted);">Positif Rail Voltage (V+)</label>
+            <input type="number" id="opampPosRail" step="0.1" value="15" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: var(--bg-main); color: var(--text-main);">
+        </div>
+        <div>
+            <label style="font-size: 12px; color: var(--text-muted);">Negatif Rail Voltage (V-)</label>
+            <input type="number" id="opampNegRail" step="0.1" value="-15" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: var(--bg-main); color: var(--text-main);">
+        </div>
     </div>
     <div id="sliderInputGroup" style="display:none;">
       <p style="font-size: 13px; color: var(--text-muted); margin-bottom:6px;">
@@ -488,6 +643,11 @@
 
  <div class="toast-container" id="toastContainer"></div>
  
-<script src="app.js"></script>
+<script src="src/components/ComponentDefs.js"></script>
+<script src="src/HistoryManager.js"></script>
+<script src="src/state/CircuitStore.js"></script>
+<script src="src/engine/SimulationEngine.js"></script>
+<script src="src/ui/UIManager.js"></script>
+<script src="main.js"></script>
 </body>
 </html>

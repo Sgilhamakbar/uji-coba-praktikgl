@@ -1486,6 +1486,8 @@ function init() {
 
 let initialPinchDistance = null;
 let initialZoomState = 1;
+let initialPinchMidX = 0, initialPinchMidY = 0;
+let initialCanvasX = 0, initialCanvasY = 0;
 let lastTapTime = 0;
 let wasMultiTouch = false;
 
@@ -1516,7 +1518,7 @@ function initSmartCanvasNavigation() {
     }
     // 2. Logika Cubit untuk Zoom (Pinch-to-Zoom) dengan 2 Jari
     else if (e.touches.length > 1) {
-      isPanning = false; // Batalkan pan jika jari > 1
+      isPanning = false; 
       wasMultiTouch = true;
       if (e.touches.length === 2) {
         initialPinchDistance = Math.hypot(
@@ -1524,6 +1526,14 @@ function initSmartCanvasNavigation() {
           e.touches[0].clientY - e.touches[1].clientY
         );
         initialZoomState = UIManager.currentZoom;
+        
+        // 🟢 FIX JITTER: Kunci titik koordinat awal di milidetik pertama Anda menyentuh
+        initialPinchMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+        initialPinchMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+        
+        const rect = canvasWrapper.getBoundingClientRect();
+        initialCanvasX = (canvasWrapper.scrollLeft + initialPinchMidX - rect.left) / initialZoomState;
+        initialCanvasY = (canvasWrapper.scrollTop + initialPinchMidY - rect.top) / initialZoomState;
       }
     }
   }, { passive: true }); // 🟢 FIX LIGTHOUSE: Diubah menjadi 'true' karena tidak ada preventDefault di sini!
@@ -1539,7 +1549,7 @@ canvasWrapper.addEventListener('touchmove', (e) => {
     }
     // 2. Eksekusi Zoom dengan 2 jari
     else if (e.touches.length === 2 && initialPinchDistance) {
-      e.preventDefault(); // Cegah pergeseran halaman bawaan browser
+      e.preventDefault(); 
       
       const currentDistance = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
@@ -1547,16 +1557,45 @@ canvasWrapper.addEventListener('touchmove', (e) => {
       );
 
       const scale = currentDistance / initialPinchDistance;
-      
-      // Kecepatan zoom layar sentuh yang sudah Anda perlambat
       const zoomSpeed = 0.5; 
       let newZoom = initialZoomState + ((scale - 1) * initialZoomState * zoomSpeed);
+      
+      // Batasi zoom maksimal dan minimal
+      newZoom = Math.max(0.5, Math.min(newZoom, 2.0));
 
-      // Ambil titik tengah di antara posisi kedua jari sebagai pusat target zoom
-      const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-      const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+      const currentMidX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+      const currentMidY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
 
-      UIManager.setZoom(newZoom, midX, midY);
+      // 🟢 FIX JITTER: Jangan gunakan UIManager.setZoom berulang-ulang agar tidak tabrakan
+      UIManager.currentZoom = newZoom;
+      const canvas = document.getElementById('canvas');
+      const rect = canvasWrapper.getBoundingClientRect();
+
+      canvas.style.transform = `scale(${newZoom})`;
+      canvas.style.transformOrigin = '0 0';
+
+      // Pastikan ruang scroll ikut membesar di HP
+      let spacer = document.getElementById('canvas-spacer');
+      if (!spacer) {
+          spacer = document.createElement('div');
+          spacer.id = 'canvas-spacer';
+          spacer.style.position = 'absolute';
+          spacer.style.top = '0'; spacer.style.left = '0';
+          spacer.style.pointerEvents = 'none'; spacer.style.visibility = 'hidden';
+          canvasWrapper.appendChild(spacer);
+      }
+      spacer.style.width = (3000 * newZoom) + 'px';
+      spacer.style.height = (3000 * newZoom) + 'px';
+
+      // Sinkronkan UI
+      const zoomLabel = document.getElementById('zoomLabel');
+      if (zoomLabel) zoomLabel.innerText = Math.round(newZoom * 100) + '%';
+      const zoomSlider = document.getElementById('zoomSlider');
+      if (zoomSlider) zoomSlider.value = newZoom;
+
+      // Geser layar dengan stabil berdasarkan kunci koordinat yang ditangkap di touchstart
+      canvasWrapper.scrollLeft = (initialCanvasX * newZoom) - (currentMidX - rect.left);
+      canvasWrapper.scrollTop  = (initialCanvasY * newZoom) - (currentMidY - rect.top);
     }
   }, { passive: false });
 

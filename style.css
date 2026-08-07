@@ -333,7 +333,7 @@ body {
 @media (max-width: 768px) {
   /* Kunci Layar agar tidak membal di Safari/Chrome Mobile */
   .app-container { flex-direction: column; height: 100dvh; overflow: hidden; }
-  .canvas-container { flex: 1; height: 100%; min-height: 0; }
+  .canvas-container { flex: 1; height: 100%; min-height: 0; padding-top: calc(env(safe-area-inset-top, 0px) + 8px); }
 
   /* 1. SULAP SIDEBAR MENJADI BOTTOM SHEET (LACI BAWAH) */
   .sidebar { 
@@ -381,14 +381,11 @@ body {
 
   /* 3. TOOLBAR BISA DI-SCROLL KE SAMPING (HORIZONTAL SCROLL) */
   .toolbar { 
-    padding-top: calc(env(safe-area-inset-top, 0px) + 25px);
-    padding-bottom: 10px;
-    padding-left: 15px;
-    padding-right: 15px;
-    
-    gap: 10px; overflow-x: auto; 
+    padding: 10px 15px; gap: 10px; overflow-x: auto; 
     flex-wrap: nowrap; -webkit-overflow-scrolling: touch;
-    scrollbar-width: none; /* Sembunyikan scrollbar di Firefox */
+    scrollbar-width: none;
+    position: relative;
+    z-index: 100;
   }
   .toolbar::-webkit-scrollbar { display: none; } /* Sembunyikan scrollbar di Chrome/Safari */
   .btn { padding: 8px 14px; font-size: 12px; flex-shrink: 0; }

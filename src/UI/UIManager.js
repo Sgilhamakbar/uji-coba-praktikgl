@@ -14,25 +14,41 @@ setZoom(val, clientX = null, clientY = null) {
 
     const rect = wrapper.getBoundingClientRect();
     
-    // Jika posisi kursor/jari tidak diberikan (misal klik tombol + / - dari UI), 
-    // gunakan titik tengah area wrapper sebagai pusat zoom otomatis
+    // Jika posisi jari tidak diberikan, zoom ke tengah layar
     if (clientX === null || clientY === null) {
       clientX = rect.left + rect.width / 2;
       clientY = rect.top + rect.height / 2;
     }
 
-    // 1. Hitung posisi absolut titik yang ditunjuk di dalam canvas sebelum zoom berubah
+    // 1. Catat koordinat absolut komponen yang sedang Anda tatap
     const canvasX = (wrapper.scrollLeft + clientX - rect.left) / oldZoom;
     const canvasY = (wrapper.scrollTop + clientY - rect.top) / oldZoom;
 
-    // 2. Terapkan skala perbesaran baru pada elemen kanvas
+    // 2. Perbesar ukuran visual kanvas
     canvas.style.transform = `scale(${newZoom})`;
+    canvas.style.transformOrigin = '0 0';
 
-    // 3. Sesuaikan posisi scroll wrapper agar titik koordinat tetap diam tepat di bawah kursor/jari
+    // 🟢 FIX UTAMA: Buat elemen pendorong agar ruang scroll browser ikut membesar
+    let spacer = document.getElementById('canvas-spacer');
+    if (!spacer) {
+        spacer = document.createElement('div');
+        spacer.id = 'canvas-spacer';
+        spacer.style.position = 'absolute';
+        spacer.style.top = '0';
+        spacer.style.left = '0';
+        spacer.style.pointerEvents = 'none'; // Agar tidak mengganggu klik komponen
+        spacer.style.visibility = 'hidden';
+        wrapper.appendChild(spacer);
+    }
+    // Setel ukuran pendorong agar sama persis dengan skala kanvas
+    spacer.style.width = (3000 * newZoom) + 'px';
+    spacer.style.height = (3000 * newZoom) + 'px';
+
+    // 3. Karena ruang scroll sudah luas, layar tidak akan terlempar lagi!
     wrapper.scrollLeft = canvasX * newZoom - (clientX - rect.left);
     wrapper.scrollTop = canvasY * newZoom - (clientY - rect.top);
 
-    // Update label persen dan slider di UI toolbar
+    // Update teks persen di Toolbar
     const zoomLabel = document.getElementById('zoomLabel');
     if (zoomLabel) zoomLabel.innerText = Math.round(newZoom * 100) + '%';
     const zoomSlider = document.getElementById('zoomSlider');

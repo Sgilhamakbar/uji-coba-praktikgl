@@ -381,7 +381,12 @@ body {
 
   /* 3. TOOLBAR BISA DI-SCROLL KE SAMPING (HORIZONTAL SCROLL) */
   .toolbar { 
-    padding: 10px 15px; gap: 10px; overflow-x: auto; 
+    padding-top: calc(env(safe-area-inset-top, 0px) + 25px);
+    padding-bottom: 10px;
+    padding-left: 15px;
+    padding-right: 15px;
+    
+    gap: 10px; overflow-x: auto; 
     flex-wrap: nowrap; -webkit-overflow-scrolling: touch;
     scrollbar-width: none; /* Sembunyikan scrollbar di Firefox */
   }

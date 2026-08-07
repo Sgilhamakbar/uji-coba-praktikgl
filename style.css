@@ -381,7 +381,7 @@ body {
 
   /* 3. TOOLBAR BISA DI-SCROLL KE SAMPING (HORIZONTAL SCROLL) */
   .toolbar { 
-    padding: 33px 15px 12px 15px; 
+    padding: 30px 15px 12px 15px; 
     gap: 10px; overflow-x: auto; 
     flex-wrap: nowrap; -webkit-overflow-scrolling: touch;
     scrollbar-width: none; 

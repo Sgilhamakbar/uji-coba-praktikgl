@@ -420,6 +420,56 @@
         </div>
         <div class="comp-info"><div class="comp-name">Op-Amp 5-Pin</div><div class="comp-desc">Realistis (V+ dan V-)</div></div>
       </div>
+      <div class="component-card" draggable="true" data-type="ic_4017" data-inputs="5" data-outputs="11">
+        <div class="comp-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="5" y="2" width="14" height="20" rx="2"/>
+            <line x1="2" y1="6" x2="5" y2="6"/><line x1="2" y1="10" x2="5" y2="10"/><line x1="2" y1="14" x2="5" y2="14"/><line x1="2" y1="18" x2="5" y2="18"/>
+            <line x1="19" y1="6" x2="22" y2="6"/><line x1="19" y1="10" x2="22" y2="10"/><line x1="19" y1="14" x2="22" y2="14"/><line x1="19" y1="18" x2="22" y2="18"/>
+          </svg>
+        </div>
+        <div class="comp-info">
+            <div class="comp-name">IC 4017</div>
+            <div class="comp-desc">Decade Counter (10 Output)</div>
+        </div>
+      </div>
+      <div class="component-card" draggable="true" data-type="ic_4518" data-inputs="3" data-outputs="4">
+        <div class="comp-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <!-- Badan IC -->
+            <rect x="5" y="4" width="14" height="16" rx="2"/>
+            <!-- 3 Pin Input (Kiri) -->
+            <line x1="2" y1="7" x2="5" y2="7"/>
+            <line x1="2" y1="12" x2="5" y2="12"/>
+            <line x1="2" y1="17" x2="5" y2="17"/>
+            <!-- 4 Pin Output (Kanan) -->
+            <line x1="19" y1="6" x2="22" y2="6"/>
+            <line x1="19" y1="10" x2="22" y2="10"/>
+            <line x1="19" y1="14" x2="22" y2="14"/>
+            <line x1="19" y1="18" x2="22" y2="18"/>
+          </svg>
+        </div>
+        <div class="comp-info">
+            <div class="comp-name">IC 4518</div>
+            <div class="comp-desc">BCD Up-Counter (0-9)</div>
+        </div>
+      </div>
+      <div class="component-card" draggable="true" data-type="ic_4511" data-inputs="7" data-outputs="7">
+        <div class="comp-icon">
+          <!-- Desain Ikon Mini IC Padat Pin -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="6" y="2" width="12" height="20" rx="2"/>
+            <!-- Pin Kiri -->
+            <path d="M2 4h4 M2 8h4 M2 12h4 M2 16h4 M2 20h4"/>
+            <!-- Pin Kanan -->
+            <path d="M22 4h-4 M22 8h-4 M22 12h-4 M22 16h-4 M22 20h-4"/>
+          </svg>
+        </div>
+        <div class="comp-info">
+            <div class="comp-name">IC 4511</div>
+            <div class="comp-desc">Decoder BCD ke 7-Segmen</div>
+        </div>
+      </div>
       <div class="component-card" draggable="true" data-type="ic_555" data-inputs="6" data-outputs="2">
         <div class="comp-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -431,6 +481,19 @@
         <div class="comp-info"><div class="comp-name">IC 555 Timer</div><div class="comp-desc">Pembangkit Pulsa (Clock)</div></div>
       </div>
     </div>
+    <div class="component-card" draggable="true" data-type="seven_segment" data-inputs="7" data-outputs="1">
+        <div class="comp-icon">
+          <!-- Desain ikon mini berbentuk angka 8 di dalam kotak -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="5" y="2" width="14" height="20" rx="2" fill="#0f172a"/>
+            <path d="M9 6h6 M8 8v3 M16 8v3 M9 12h6 M8 14v3 M16 14v3 M9 18h6" stroke="#facc15" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="comp-info">
+            <div class="comp-name">7-Segment</div>
+            <div class="comp-desc">Layar Angka (Common Cathode)</div>
+        </div>
+      </div>
     <div class="sidebar-section">
       <h4>Alat Ukur</h4>
       <div class="component-card" draggable="true" data-type="voltmeter" data-inputs="2" data-outputs="0">
@@ -512,7 +575,17 @@
       <input type="number" id="compValue" min="0.1" max="10000000" step="0.1" placeholder="Nilai">
       <select id="compUnit"></select>
     </div>
-    <div id="ledInputGroup" style="display: none; flex-direction: column; gap: 10px; margin-top: 15px;">
+    <div id="ledInputGroup" style="display: none; flex-direction: column; gap: 10px; margin-top: 15px;">        
+        <div>
+            <label style="font-size: 12px; color: var(--text-muted);">Warna LED</label>
+            <select id="ledColor" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: var(--bg-main); color: var(--text-main);">
+                <option value="red">Merah (Red)</option>
+                <option value="green">Hijau (Green)</option>
+                <option value="blue">Biru (Blue)</option>
+                <option value="yellow">Kuning (Yellow)</option>
+            </select>
+        </div>
+        
         <div>
             <label style="font-size: 12px; color: var(--text-muted);">Forward Voltage (V)</label>
             <input type="number" id="ledForwardV" step="0.1" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: var(--bg-main); color: var(--text-main);">
@@ -572,6 +645,23 @@
         <div>
             <label style="font-size: 12px; color: var(--text-muted);">Negatif Rail Voltage (V-)</label>
             <input type="number" id="opampNegRail" step="0.1" value="-15" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: var(--bg-main); color: var(--text-main);">
+        </div>
+    </div>
+    <!-- Tampilan Khusus Pengaturan Clock Pulse -->
+    <div id="clockInputGroup" style="display: none; flex-direction: column; gap: 12px; margin-top: 15px;">
+        <div>
+            <label style="font-size: 12px; color: var(--text-muted);">Frekuensi Detak (Kecepatan)</label>
+            <div style="display: flex; gap: 10px; align-items: center; margin-top: 4px;">
+                <input type="number" id="clockFreq" step="0.1" min="0.1" max="1000" value="2" style="flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: var(--bg-main); color: var(--text-main);">
+                <span style="font-weight: bold; font-size: 14px; color: var(--primary);">Hz</span>
+            </div>
+        </div>
+        <div>
+            <label style="font-size: 12px; color: var(--text-muted);">Status Awal (Initial State)</label>
+            <select id="clockInitial" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: var(--bg-main); color: var(--text-main); margin-top: 4px;">
+                <option value="0">0 (LOW / OFF)</option>
+                <option value="1">1 (HIGH / ON)</option>
+            </select>
         </div>
     </div>
     <div id="sliderInputGroup" style="display:none;">
@@ -643,6 +733,11 @@
 
  <div class="toast-container" id="toastContainer"></div>
  
-<script src="app.js"></script>
+<script src="src/components/ComponentDefs.js"></script>
+<script src="src/HistoryManager.js"></script>
+<script src="src/state/CircuitStore.js"></script>
+<script src="src/engine/SimulationEngine.js"></script>
+<script src="src/ui/UIManager.js"></script>
+<script src="main.js"></script>
 </body>
 </html>

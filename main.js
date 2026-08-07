@@ -1007,14 +1007,11 @@ function startTouchDragComponent(e, compId) {
 
   function onMove(e) {
     if (e.touches.length !== 1) return;
-    
     e.preventDefault();
     e.stopPropagation();
-
     const dx = (e.touches[0].clientX - startX) / UIManager.currentZoom;
     const dy = (e.touches[0].clientY - startY) / UIManager.currentZoom;
     if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
-    
     if (moved) {
       let snapDx = 0, snapDy = 0;
 

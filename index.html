@@ -18,6 +18,15 @@
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
         <span>Simulasi Listrik</span>
       </div>
+      
+      <!-- 🟢 ELEMEN BARU: Tombol Tutup Laci (Hanya Tampil di HP) -->
+      <style>
+        #closeMenuBtn { display: none; background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; }
+        @media (max-width: 768px) { #closeMenuBtn { display: flex; align-items: center; } }
+      </style>
+      <button id="closeMenuBtn" title="Tutup Menu">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
     </div>
     <!-- KOTAK PENCARIAN & FILTER-->
     <div class="sidebar-search" style="padding: 12px 15px; position: relative; border-bottom: 1px solid var(--border, #334155); background: var(--bg-main, #0f172a);">
@@ -561,6 +570,18 @@
   </div>
 </div>
 
+<!-- 🟢 ELEMEN KHUSUS MOBILE (LACI BAWAH) -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<button class="mobile-menu-btn" id="mobileMenuBtn">
+  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="12" y1="5" x2="12" y2="19"></line>
+    <line x1="5" y1="12" x2="19" y2="12"></line>
+  </svg>
+  Komponen
+</button>
+<!-- Akhir dari Elemen Baru -->
+
 <div class="modal" id="valueModal">
   <div class="modal-content" style="position: relative;">
     <button onclick="closeValueModal()" title="Tutup (Esc)" style="position: absolute; top: 15px; right: 15px; background: none; border: none; cursor: pointer; color: var(--text-muted); display: flex; padding: 4px; border-radius: 4px;" onmouseover="this.style.color='var(--danger)'; this.style.background='var(--control-bg)'" onmouseout="this.style.color='var(--text-muted)'; this.style.background='none'">
@@ -737,7 +758,7 @@
 <script src="src/HistoryManager.js"></script>
 <script src="src/state/CircuitStore.js"></script>
 <script src="src/engine/SimulationEngine.js"></script>
-<script src="src/UI/UIManager.js"></script>
+<script src="src/ui/UIManager.js"></script>
 <script src="main.js"></script>
 </body>
 </html>

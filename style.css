@@ -333,7 +333,7 @@ body {
 @media (max-width: 768px) {
   /* Kunci Layar agar tidak membal di Safari/Chrome Mobile */
   .app-container { flex-direction: column; height: 100dvh; overflow: hidden; }
-  .canvas-container { flex: 1; height: 100%; min-height: 0; padding-top: calc(env(safe-area-inset-top, 0px) + 8px); }
+  .canvas-container { flex: 1; height: 100%; min-height: 0; padding-top: 0; }
 
   /* 1. SULAP SIDEBAR MENJADI BOTTOM SHEET (LACI BAWAH) */
   .sidebar { 
@@ -381,9 +381,15 @@ body {
 
   /* 3. TOOLBAR BISA DI-SCROLL KE SAMPING (HORIZONTAL SCROLL) */
   .toolbar { 
-    padding: 10px 15px; gap: 10px; overflow-x: auto; 
-    flex-wrap: nowrap; -webkit-overflow-scrolling: touch;
+    /* 🟢 FIX 1: Beri jarak dinamis agar turun menghindar dari tab browser/poni HP */
+    padding: calc(env(safe-area-inset-top, 10px) + 10px) 15px 10px 15px; 
+    gap: 10px; 
+    overflow-x: auto; 
+    flex-wrap: nowrap; 
+    -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
+    /* 🟢 FIX 2: Mencegah toolbar hilang tergencet oleh luasnya kanvas */
+    flex-shrink: 0; 
     position: relative;
     z-index: 100;
   }

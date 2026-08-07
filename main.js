@@ -1078,69 +1078,37 @@ dragGroup.forEach(item => {
 }
 
 // ─── Drag from sidebar & Klik untuk Menambah ──────────────────────────────────
-let draggedCard = null, touchClone = null, touchStartX = 0, touchStartY = 0;
+let draggedCard = null;
 
 document.querySelectorAll('.component-card').forEach(card => {
+  // Fitur 1: Klik/Ketuk untuk menambah komponen (Sempurna untuk HP & Desktop)
   card.addEventListener('click', (e) => {
     if (card.classList.contains('dragging')) return;
     const canvas = document.getElementById('canvas');
     const wrapper = document.getElementById('canvas-wrapper');
     const cr = canvas.getBoundingClientRect();
     const wr = wrapper.getBoundingClientRect();
+    
+    // Kalkulasi untuk menaruh komponen tepat di tengah layar yang sedang dilihat
     const centerX = wr.left + (wr.width / 2);
     const centerY = wr.top + (wr.height / 2);
     const x = (centerX - cr.left) / UIManager.currentZoom;
     const y = (centerY - cr.top) / UIManager.currentZoom;
+    
     createComponent(card.dataset.type, x, y, +card.dataset.inputs, +card.dataset.outputs);
     UIManager.showToast('✅ Komponen ditambahkan');
   });
 
+  // Fitur 2: Drag and Drop Asli (Hanya akan aktif untuk Mouse di Laptop/Desktop)
   card.addEventListener('dragstart', e => {
     draggedCard = card;
     e.dataTransfer.setData('text/plain', JSON.stringify({ type: card.dataset.type, inputs: +card.dataset.inputs, outputs: +card.dataset.outputs }));
     card.classList.add('dragging');
   });
-  card.addEventListener('dragend', () => { card.classList.remove('dragging'); draggedCard = null; });
-
-  card.addEventListener('touchstart', e => {
-    draggedCard = card; touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY;
-    card.classList.add('dragging');
-  }, { passive: true });
-
-  card.addEventListener('touchmove', e => {
-    if (draggedCard !== card || e.touches.length !== 1) return;
-    const dx = e.touches[0].clientX - touchStartX, dy = e.touches[0].clientY - touchStartY;
-    if (!touchClone && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
-      e.preventDefault();
-      touchClone = card.cloneNode(true);
-      Object.assign(touchClone.style, { position:'fixed', zIndex:'9999', opacity:'0.7', pointerEvents:'none', width: card.offsetWidth+'px' });
-      document.body.appendChild(touchClone);
-    }
-    if (touchClone) {
-      e.preventDefault();
-      touchClone.style.left = (e.touches[0].clientX - 50) + 'px';
-      touchClone.style.top  = (e.touches[0].clientY - 30) + 'px';
-    }
-  }, { passive: false });
-
-  card.addEventListener('touchend', e => {
-    card.classList.remove('dragging');
-    if (touchClone && draggedCard === card) {
-      const t = e.changedTouches[0];
-      const wrapper = document.getElementById('canvas-wrapper');
-      const wr = wrapper.getBoundingClientRect();
-      const canvas = document.getElementById('canvas');
-      const cr = canvas.getBoundingClientRect();
-
-      if (t.clientX >= wr.left && t.clientX <= wr.right && t.clientY >= wr.top && t.clientY <= wr.bottom) {
-        const x = (t.clientX - cr.left) / UIManager.currentZoom;
-        const y = (t.clientY - cr.top) / UIManager.currentZoom;
-        createComponent(card.dataset.type, x, y, +card.dataset.inputs, +card.dataset.outputs);
-        UIManager.showToast('✅ Komponen ditambahkan');
-      }
-      touchClone.remove(); touchClone = null;
-    }
-    draggedCard = null;
+  
+  card.addEventListener('dragend', () => { 
+    card.classList.remove('dragging'); 
+    draggedCard = null; 
   });
 });
 

@@ -1007,12 +1007,15 @@ function startTouchDragComponent(e, compId) {
 
   function onMove(e) {
     if (e.touches.length !== 1) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+
     const dx = (e.touches[0].clientX - startX) / UIManager.currentZoom;
     const dy = (e.touches[0].clientY - startY) / UIManager.currentZoom;
     if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
     
     if (moved) {
-      e.preventDefault();
       let snapDx = 0, snapDy = 0;
 
 dragGroup.forEach(item => {
@@ -1084,16 +1087,11 @@ document.querySelectorAll('.component-card').forEach(card => {
   // Fitur 1: Klik/Ketuk untuk menambah komponen (Sempurna untuk HP & Desktop)
   card.addEventListener('click', (e) => {
     if (card.classList.contains('dragging')) return;
-    const canvas = document.getElementById('canvas');
     const wrapper = document.getElementById('canvas-wrapper');
-    const cr = canvas.getBoundingClientRect();
-    const wr = wrapper.getBoundingClientRect();
     
-    // Kalkulasi untuk menaruh komponen tepat di tengah layar yang sedang dilihat
-    const centerX = wr.left + (wr.width / 2);
-    const centerY = wr.top + (wr.height / 2);
-    const x = (centerX - cr.left) / UIManager.currentZoom;
-    const y = (centerY - cr.top) / UIManager.currentZoom;
+    // Kalkulasi baru: Membaca posisi scroll (Pasti jatuh di tengah layar)
+    const x = (wrapper.scrollLeft + wrapper.clientWidth / 2) / UIManager.currentZoom;
+    const y = (wrapper.scrollTop + wrapper.clientHeight / 2) / UIManager.currentZoom;
     
     createComponent(card.dataset.type, x, y, +card.dataset.inputs, +card.dataset.outputs);
     UIManager.showToast('✅ Komponen ditambahkan');

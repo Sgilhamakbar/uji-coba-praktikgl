@@ -1566,11 +1566,21 @@ canvasWrapper.addEventListener('touchend', (e) => {
     }
 
     if (e.touches.length === 0) {
+      // 🟢 FIX UTAMA: Matikan status menggeser saat jari diangkat dari layar
+      isPanning = false; 
+
       if (wasMultiTouch) {
         wasMultiTouch = false;
         return;
       }
     }
+  });
+
+  // 🟢 FIX TAMBAHAN: Jaga-jaga jika sistem HP membatalkan sentuhan secara paksa
+  canvasWrapper.addEventListener('touchcancel', (e) => {
+    isPanning = false;
+    initialPinchDistance = null;
+    wasMultiTouch = false;
   });
 
   // ==========================================

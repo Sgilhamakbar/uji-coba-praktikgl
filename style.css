@@ -326,19 +326,87 @@ body {
 .zoom-btn:hover { color: var(--primary); }
 #zoomSlider { width: 70px; height: 4px; accent-color: var(--primary); cursor: pointer; }
 
+/* ─── ELEMEN KHUSUS MOBILE (SEMBUNYIKAN DI DESKTOP) ─── */
+.mobile-menu-btn { display: none; }
+.sidebar-overlay { display: none; }
+
 @media (max-width: 768px) {
-  .app-container { flex-direction: column; }
-  .sidebar { width: 100%; max-height: 220px; flex-direction: row; flex-wrap: wrap; gap: 8px; padding: 12px; }
-  .sidebar-header { width: 100%; border-bottom: none; padding-bottom: 0; margin-bottom: 0; font-size: 14px; }
-  .sidebar-section { display: contents; }
-  .sidebar-section h4 { width: 100%; flex-basis: 100%; margin: 4px 0; font-size: 10px; }
-  .component-card { flex: 0 0 auto; width: calc(50% - 4px); padding: 8px; gap: 8px; }
-  .comp-icon { width: 28px; height: 28px; }
-  .comp-icon svg { width: 16px; height: 16px; }
-  .comp-name { font-size: 11px; } .comp-desc { display: none; }
-  .toolbar { padding: 10px; gap: 6px; overflow-x: auto; flex-wrap: nowrap; }
-  .btn { padding: 6px 10px; font-size: 11px; }
-  .zoom-controls { margin-left: 0; }
+  /* Kunci Layar agar tidak membal di Safari/Chrome Mobile */
+  .app-container { flex-direction: column; height: 100dvh; overflow: hidden; }
+  .canvas-container { flex: 1; height: 100%; min-height: 0; }
+
+  /* 1. SULAP SIDEBAR MENJADI BOTTOM SHEET (LACI BAWAH) */
+  .sidebar { 
+    position: fixed; 
+    bottom: -100%; /* Sembunyikan di bawah layar secara default */
+    left: 0; 
+    width: 100%; 
+    height: 75vh; /* Tinggi laci 75% dari layar */
+    max-height: none;
+    background: var(--bg-container); 
+    border-top-left-radius: 24px; 
+    border-top-right-radius: 24px;
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
+    z-index: 1000; 
+    transition: bottom 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    padding: 24px 16px 16px 16px; 
+    flex-direction: column; 
+    flex-wrap: nowrap;
+  }
+
+  /* Class pemicu animasi laci terbuka */
+  .sidebar.open { bottom: 0; }
+
+  /* Pegangan laci (Garis estetika di tengah atas laci) */
+  .sidebar::before {
+    content: ''; position: absolute; top: 10px; left: 50%;
+    transform: translateX(-50%); width: 40px; height: 5px;
+    border-radius: 5px; background: var(--border-color);
+  }
+
+  /* 2. RAPIKAN ISI DALAM LACI */
+  .sidebar-header { 
+    width: 100%; font-size: 16px; border-bottom: 1px solid var(--border-color); 
+    padding-bottom: 12px; margin-bottom: 8px; justify-content: space-between; 
+  }
+  .sidebar-section { display: block; }
+  .sidebar-section h4 { font-size: 12px; margin: 16px 0 10px 0; color: var(--primary); }
+  
+  /* Kembalikan komponen agar tidak dempet */
+  .component-card { width: 100%; padding: 12px; gap: 12px; display: flex; margin-bottom: 8px; }
+  .comp-icon { width: 36px; height: 36px; }
+  .comp-icon svg { width: 20px; height: 20px; }
+  .comp-name { font-size: 13px; } 
+  .comp-desc { display: block; font-size: 11px; } /* Tampilkan deskripsi di HP */
+
+  /* 3. TOOLBAR BISA DI-SCROLL KE SAMPING (HORIZONTAL SCROLL) */
+  .toolbar { 
+    padding: 10px 15px; gap: 10px; overflow-x: auto; 
+    flex-wrap: nowrap; -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Sembunyikan scrollbar di Firefox */
+  }
+  .toolbar::-webkit-scrollbar { display: none; } /* Sembunyikan scrollbar di Chrome/Safari */
+  .btn { padding: 8px 14px; font-size: 12px; flex-shrink: 0; }
+  .zoom-controls { margin-left: 0; flex-shrink: 0; }
+
+  /* 4. OVERLAY GELAP SAAT LACI TERBUKA */
+  .sidebar-overlay {
+    display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(2px);
+    z-index: 999; opacity: 0; pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  .sidebar-overlay.open { opacity: 1; pointer-events: auto; }
+
+  /* 5. TOMBOL APUNG MENU (FLOATING ACTION BUTTON) */
+  .mobile-menu-btn {
+    display: flex; position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%); background: var(--primary); color: white;
+    border: none; border-radius: 30px; padding: 14px 24px;
+    font-size: 14px; font-weight: bold; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+    z-index: 900; align-items: center; gap: 8px; cursor: pointer; transition: transform 0.2s;
+  }
+  .mobile-menu-btn:active { transform: translateX(-50%) scale(0.95); }
 }
 /* ─── TOMBOL ROTASI KOMPONEN (FLOATING) ─── */
 .circuit-component .rotate-btn {

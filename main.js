@@ -1480,6 +1480,32 @@ function init() {
       });
     }, 300);
   }
+
+  // 🟢 FIX UTAMA: Kunci Posisi Kanvas saat Layar/Sidebar Berubah Ukuran
+  let lastWrapperWidth = wrapper.clientWidth;
+  let lastWrapperHeight = wrapper.clientHeight;
+
+  const resizeObserver = new ResizeObserver(entries => {
+    for (let entry of entries) {
+      const newWidth = entry.contentRect.width;
+      const newHeight = entry.contentRect.height;
+      
+      // Hitung selisih ukuran layar
+      const dx = (lastWrapperWidth - newWidth) / 2;
+      const dy = (lastWrapperHeight - newHeight) / 2;
+      
+      // Geser scroll secara instan agar titik tengah pandangan tidak kabur
+      wrapper.scrollLeft += dx;
+      wrapper.scrollTop += dy;
+      
+      // Simpan ukuran baru ke memori
+      lastWrapperWidth = newWidth;
+      lastWrapperHeight = newHeight;
+    }
+  });
+  
+  // Mulai pantau perubahan ukuran pada wadah kanvas
+  resizeObserver.observe(wrapper);
 }
 
 // ─── FITUR SMART NAVIGATION (ZOOM & PAN KANVAS TANPA SCROLLBAR) ──────────────────

@@ -1092,6 +1092,14 @@ document.querySelectorAll('.component-card').forEach(card => {
     
     createComponent(card.dataset.type, x, y, +card.dataset.inputs, +card.dataset.outputs);
     UIManager.showToast('✅ Komponen ditambahkan');
+
+    // 🟢 LOGIKA BARU: Otomatis tutup laci setelah komponen dipilih (khusus HP)
+    const sidebar = document.getElementById('sidebar');
+    const sidebarOverlay = document.getElementById('sidebarOverlay');
+    if (sidebar && sidebar.classList.contains('open')) {
+        sidebar.classList.remove('open');
+        if (sidebarOverlay) sidebarOverlay.classList.remove('open');
+    }
   });
 
   // Fitur 2: Drag and Drop Asli (Hanya akan aktif untuk Mouse di Laptop/Desktop)
@@ -1807,8 +1815,25 @@ document.addEventListener('DOMContentLoaded', () => {
   
   if (typeof initSmartCanvasNavigation === 'function') initSmartCanvasNavigation();
 
-  // 🟢 Panggil fungsi Menu Klik Kanan yang baru kita buat
+  // Panggil fungsi Menu Klik Kanan yang baru kita buat
   initContextMenu(); 
+
+  // 🟢 LOGIKA BARU: Menghidupkan Laci Mobile (Bottom Sheet)
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const closeMenuBtn = document.getElementById('closeMenuBtn');
+  const sidebarOverlay = document.getElementById('sidebarOverlay');
+  const sidebar = document.getElementById('sidebar');
+
+  // Fungsi untuk buka/tutup laci
+  const toggleMobileMenu = () => {
+    if (sidebar) sidebar.classList.toggle('open');
+    if (sidebarOverlay) sidebarOverlay.classList.toggle('open');
+  };
+
+  // Pasang sensor klik pada ketiga elemen pemicu
+  if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+  if (closeMenuBtn) closeMenuBtn.addEventListener('click', toggleMobileMenu);
+  if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleMobileMenu);
 });
 // ─── FITUR HAPUS SEMUA KABEL (SCISSORS) ────────────────────────────────────────
 function clearAllWires() {

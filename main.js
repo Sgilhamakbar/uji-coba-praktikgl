@@ -1092,14 +1092,6 @@ document.querySelectorAll('.component-card').forEach(card => {
     
     createComponent(card.dataset.type, x, y, +card.dataset.inputs, +card.dataset.outputs);
     UIManager.showToast('✅ Komponen ditambahkan');
-
-    // 🟢 LOGIKA BARU: Otomatis tutup laci setelah komponen dipilih (khusus HP)
-    const sidebar = document.getElementById('sidebar');
-    const sidebarOverlay = document.getElementById('sidebarOverlay');
-    if (sidebar && sidebar.classList.contains('open')) {
-        sidebar.classList.remove('open');
-        if (sidebarOverlay) sidebarOverlay.classList.remove('open');
-    }
   });
 
   // Fitur 2: Drag and Drop Asli (Hanya akan aktif untuk Mouse di Laptop/Desktop)

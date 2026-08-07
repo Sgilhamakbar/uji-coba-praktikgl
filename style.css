@@ -85,7 +85,7 @@ body {
   border: 1px solid var(--border-color);
   border-radius: var(--radius);
   padding: 10px 12px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  user-select: none; display: flex; align-items: center; gap: 12px; touch-action: none;
+  user-select: none; display: flex; align-items: center; gap: 12px;
 }
 .component-card:hover { border-color: var(--primary); box-shadow: var(--box-shadow); transform: translateY(-2px); }
 .component-card:active { transform: scale(0.98); }

@@ -1830,12 +1830,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sidebarOverlay) sidebarOverlay.classList.toggle('open');
   };
 
-  // Fungsi untuk buka/tutup laci
-  const toggleMobileMenu = () => {
-    if (sidebar) sidebar.classList.toggle('open');
-    if (sidebarOverlay) sidebarOverlay.classList.toggle('open');
-  };
-
   // Pasang sensor klik pada ketiga elemen pemicu
   if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
   if (closeMenuBtn) closeMenuBtn.addEventListener('click', toggleMobileMenu);

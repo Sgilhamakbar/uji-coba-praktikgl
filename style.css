@@ -326,6 +326,43 @@ body {
 .zoom-btn:hover { color: var(--primary); }
 #zoomSlider { width: 70px; height: 4px; accent-color: var(--primary); cursor: pointer; }
 
+/* ─── FITUR COLLAPSE SIDEBAR (KHUSUS TABLET & DESKTOP) ─── */
+@media (min-width: 769px) {
+  /* Beri animasi mulus saat lebar berubah */
+  .sidebar {
+    transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), padding 0.3s ease, background-color 0.3s ease;
+    overflow-x: hidden;
+  }
+  
+  /* Saat class .collapsed aktif */
+  .sidebar.collapsed {
+    width: 80px; /* Lebar menyusut hanya seukuran ikon */
+    padding: 16px 10px;
+  }
+  
+  /* Sembunyikan teks judul, pencarian, judul kategori, dan deskripsi komponen */
+  .sidebar.collapsed .title-text,
+  .sidebar.collapsed .sidebar-search,
+  .sidebar.collapsed .sidebar-section h4,
+  .sidebar.collapsed .comp-info {
+    display: none;
+  }
+  
+  /* Posisikan ikon di tengah secara sempurna */
+  .sidebar.collapsed .sidebar-header {
+    justify-content: center;
+  }
+  .sidebar.collapsed .component-card {
+    justify-content: center;
+    padding: 10px 0;
+  }
+  
+  /* Putar balik ikon panah saat terlipat */
+  .sidebar.collapsed #collapseSidebarBtn {
+    transform: rotate(180deg);
+  }
+}
+
 /* ─── ELEMEN KHUSUS MOBILE (SEMBUNYIKAN DI DESKTOP) ─── */
 .bottom-nav-bar { display: none; }
 .sidebar-overlay { display: none; }

@@ -327,7 +327,7 @@ body {
 #zoomSlider { width: 70px; height: 4px; accent-color: var(--primary); cursor: pointer; }
 
 /* ─── ELEMEN KHUSUS MOBILE (SEMBUNYIKAN DI DESKTOP) ─── */
-.mobile-menu-btn { display: none; }
+.bottom-nav-bar { display: none; }
 .sidebar-overlay { display: none; }
 
 @media (max-width: 768px) {
@@ -405,15 +405,40 @@ body {
   }
   .sidebar-overlay.open { opacity: 1; pointer-events: auto; }
 
-  /* 5. TOMBOL APUNG MENU (FLOATING ACTION BUTTON) */
-  .mobile-menu-btn {
-    display: flex; position: fixed; bottom: 24px; left: 50%;
-    transform: translateX(-50%); background: var(--primary); color: white;
-    border: none; border-radius: 30px; padding: 14px 24px;
-    font-size: 14px; font-weight: bold; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
-    z-index: 900; align-items: center; gap: 8px; cursor: pointer; transition: transform 0.2s;
+  /* 5. BOTTOM NAVIGATION BAR (GAYA INSTAGRAM) */
+  .bottom-nav-bar {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: var(--bg-container);
+    border-top: 1px solid var(--border-color);
+    z-index: 900;
+    justify-content: space-around; /* Menyebarkan tombol dengan jarak seimbang */
+    /* Padding bawah tambahan khusus untuk layar HP berponi / iPhone swipe bar */
+    padding: 10px 0 calc(env(safe-area-inset-bottom, 0px) + 10px) 0;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
   }
-  .mobile-menu-btn:active { transform: translateX(-50%) scale(0.95); }
+  
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: none;
+    color: var(--text-muted); /* Warna abu-abu saat tidak aktif */
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: color 0.2s;
+  }
+  
+  .nav-item svg { width: 24px; height: 24px; stroke-width: 2px; transition: transform 0.2s; }
+  .nav-item.active { color: var(--primary); } /* Warna biru/tema saat aktif */
+  .nav-item:active svg { transform: scale(0.85); } /* Efek membal saat ditekan */
 }
 /* ─── TOMBOL ROTASI KOMPONEN (FLOATING) ─── */
 .circuit-component .rotate-btn {

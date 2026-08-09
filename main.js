@@ -1816,18 +1816,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const sidebarOverlay = document.getElementById('sidebarOverlay');
   const sidebar = document.getElementById('sidebar');
 
-  // 🟢 LOGIKA BARU: Menghidupkan Laci Mobile (Bottom Sheet)
-  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-  const closeMenuBtn = document.getElementById('closeMenuBtn');
-  const sidebarOverlay = document.getElementById('sidebarOverlay');
-  const sidebar = document.getElementById('sidebar');
-
   // 🟢 FITUR BARU: Tombol Lipat Sidebar (Tablet/Desktop)
   const collapseBtn = document.getElementById('collapseSidebarBtn');
   if (collapseBtn) {
     collapseBtn.addEventListener('click', () => {
       sidebar.classList.toggle('collapsed');
     });
+   }
 
   // Fungsi untuk buka/tutup laci
   const toggleMobileMenu = () => {

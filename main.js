@@ -1828,7 +1828,6 @@ document.addEventListener('DOMContentLoaded', () => {
     collapseBtn.addEventListener('click', () => {
       sidebar.classList.toggle('collapsed');
     });
-  }
 
   // Fungsi untuk buka/tutup laci
   const toggleMobileMenu = () => {

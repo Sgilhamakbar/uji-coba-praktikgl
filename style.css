@@ -358,7 +358,7 @@ body {
   }
   
   /* Putar balik ikon panah saat terlipat */
-  .sidebar.collapsed #collapseSidebarBtn svg {
+  .sidebar.collapsed #collapseSidebarBtn {
     transform: rotate(180deg);
   }
 }

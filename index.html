@@ -21,19 +21,53 @@
       
       <!-- Tombol Lipat Sidebar (Tablet/Desktop) -->
       <button id="collapseSidebarBtn" title="Lipat Panel">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-      </button>
-      
-      <!-- Tombol Tutup Laci (Hanya Tampil di HP) -->
-      <style>
-        #closeMenuBtn { display: none; background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; }
-        #collapseSidebarBtn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; transition: transform 0.3s; display: flex; align-items: center; }
-        #collapseSidebarBtn:hover { color: var(--primary); }
-        @media (max-width: 768px) { 
-            #closeMenuBtn { display: flex; align-items: center; } 
-            #collapseSidebarBtn { display: none; } /* Sembunyikan tombol lipat di HP */
-        }
-      </style>
+  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="15 18 9 12 15 6"></polyline>
+  </svg>
+</button>
+
+<style>
+  #closeMenuBtn { 
+    display: none; 
+    background: none; 
+    border: none; 
+    color: var(--text-muted); 
+    cursor: pointer; 
+    padding: 4px; 
+  }
+
+  /* Desain Tombol Lipat Sidebar */
+  #collapseSidebarBtn {
+    background: var(--control-bg, #f1f5f9);
+    border: 1px solid var(--border-color, #e2e8f0);
+    color: var(--text-muted, #64748b);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Transisi dipasang langsung pada tombol */
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s, border-color 0.2s, color 0.2s;
+  }
+
+  /* Efek saat kursor diarahkan (Hover) */
+  #collapseSidebarBtn:hover {
+    background: var(--primary, #4f46e5);
+    border-color: var(--primary, #4f46e5);
+    color: #ffffff;
+  }
+
+  /* KUNCI PERBAIKAN: Rotasi tombol 180 derajat saat sidebar dalam keadaan terlipat (collapsed) */
+  .sidebar.collapsed #collapseSidebarBtn {
+    transform: rotate(180deg) !important;
+  }
+
+  @media (max-width: 768px) { 
+    #closeMenuBtn { display: flex; align-items: center; } 
+    #collapseSidebarBtn { display: none; } /* Sembunyikan di HP */
+  }
+</style>
       <button id="closeMenuBtn" title="Tutup Menu">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>

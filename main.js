@@ -1,7 +1,6 @@
 // File: main.js
 
 // ─── Penghubung Tombol HTML ke Modul ──────────────────────────────────────────
-// ─── Penghubung Tombol HTML ke Modul ──────────────────────────────────────────
 
 // 1. Fungsi Pengendali Tampilan Tombol (Auto-Lock)
 window.updateSimControlsUI = (state) => {
@@ -2008,14 +2007,34 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   window.confirmExit = () => {
-      CircuitStore.hasUnsavedChanges = false; // Bypass status
+      CircuitStore.hasUnsavedChanges = false; // Bypass status keamanan
       window.onbeforeunload = null;           // Matikan jebakan tab PC
       
-      // Eksekusi penutupan PWA (Mundur jauh dari riwayat peramban)
-      history.go(-2); 
+      // 1. Matikan aliran listrik di latar belakang agar HP tidak boros baterai
+      if (typeof SimulationEngine !== 'undefined') SimulationEngine.stop();
       
-      // Cadangan jika metode histori gagal, coba tutup tab
-      setTimeout(() => { window.close(); }, 300);
+      // 2. Coba tutup paksa (Berhasil di PC, namun akan diblokir di HP)
+      window.close();
+      
+      // 3. Jebakan untuk HP: Ganti seluruh layar dengan wujud "Aman Ditutup"
+      setTimeout(() => {
+          document.body.innerHTML = `
+              <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; background:var(--bg-body); color:var(--text-main); text-align:center; padding:20px;">
+                  <svg viewBox="0 0 24 24" width="72" height="72" fill="none" stroke="#10b981" stroke-width="2" style="margin-bottom:16px;">
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                  <h2 style="margin-bottom:12px; font-size:24px;">Aman untuk Keluar</h2>
+                  <p style="color:var(--text-muted); font-size:14px; max-width:300px; line-height:1.5;">
+                      Simulator telah dihentikan dan daya telah diputus.<br><br>
+                      Silakan tutup aplikasi ini dengan menekan tombol <b>Home</b> atau <b>Usap Layar (Swipe Up)</b>.
+                  </p>
+                  <button onclick="window.location.reload()" style="margin-top:32px; padding:12px 24px; background:var(--primary); color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold; font-size:14px; box-shadow:0 4px 6px rgba(0,0,0,0.1);">
+                      Buka Kembali Simulator
+                  </button>
+              </div>
+          `;
+      }, 100);
   };
 });
 

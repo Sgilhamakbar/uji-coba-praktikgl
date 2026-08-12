@@ -19,55 +19,57 @@
         <span class="title-text">Simulasi Listrik</span>
       </div>
       
-      <!-- Tombol Lipat Sidebar (Tablet/Desktop) -->
+      <style>
+        /* Tombol Tutup Laci (Hanya Tampil di HP) */
+        #closeMenuBtn { display: none; background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; }
+        #collapseSidebarBtn { 
+          background: transparent;  
+          border: none;             
+          box-shadow: none;         
+          color: var(--text-muted); 
+          cursor: pointer; 
+          width: 32px; 
+          height: 32px; 
+          border-radius: 6px;       
+          display: flex; 
+          align-items: center; 
+          justify-content: center;
+          margin-left: auto;        /* 👈 Menggeser tombol mentok ke kanan */
+          transition: background 0.2s, color 0.2s, transform 0.1s;
+        }
+        
+        #collapseSidebarBtn svg {
+          width: 22px; 
+          height: 22px;
+          transition: transform 0.3s ease;
+        }
+        
+        /* Efek Hover Flat */
+        #collapseSidebarBtn:hover { 
+          background: var(--control-bg); 
+          color: var(--text-main); 
+        }
+        
+        /* Efek saat tombol ditekan */
+        #collapseSidebarBtn:active {
+          transform: scale(0.92); 
+        }
+        
+        @media (max-width: 768px) { 
+            #closeMenuBtn { display: flex; align-items: center; } 
+            #collapseSidebarBtn { display: none; } /* Sembunyikan tombol lipat di HP */
+        }
+      </style>
       <button id="collapseSidebarBtn" title="Lipat Panel">
-  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-    <polyline points="15 18 9 12 15 6"></polyline>
-  </svg>
-</button>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <!-- Bentuk laci/panel luar -->
+          <path d="M10 4h9v16h-9"></path>
+          <!-- Panah ke kiri (untuk menutup) -->
+          <path d="M15 16l-4-4 4-4"></path>
+        </svg>
+      </button>
 
-<style>
-  #closeMenuBtn { 
-    display: none; 
-    background: none; 
-    border: none; 
-    color: var(--text-muted); 
-    cursor: pointer; 
-    padding: 4px; 
-  }
-
-  /* Desain Tombol Lipat Sidebar */
-  #collapseSidebarBtn {
-    background: var(--control-bg, #f1f5f9);
-    border: 1px solid var(--border-color, #e2e8f0);
-    color: var(--text-muted, #64748b);
-    cursor: pointer;
-    padding: 6px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    /* Transisi dipasang langsung pada tombol */
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s, border-color 0.2s, color 0.2s;
-  }
-
-  /* Efek saat kursor diarahkan (Hover) */
-  #collapseSidebarBtn:hover {
-    background: var(--primary, #4f46e5);
-    border-color: var(--primary, #4f46e5);
-    color: #ffffff;
-  }
-
-  /* KUNCI PERBAIKAN: Rotasi tombol 180 derajat saat sidebar dalam keadaan terlipat (collapsed) */
-  .sidebar.collapsed #collapseSidebarBtn {
-    transform: rotate(180deg) !important;
-  }
-
-  @media (max-width: 768px) { 
-    #closeMenuBtn { display: flex; align-items: center; } 
-    #collapseSidebarBtn { display: none; } /* Sembunyikan di HP */
-  }
-</style>
+      <!-- Tombol Tutup Menu (HP) -->
       <button id="closeMenuBtn" title="Tutup Menu">
         <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
@@ -561,12 +563,24 @@
   </div>
   <div class="canvas-container">
     <div class="toolbar">
-      <button class="btn btn-primary" id="btnSimulate" onclick="toggleSimulation()">
-        <span class="status-indicator status-ready" id="simIndicator"></span>
-        <span id="simText" style="display:flex; align-items:center; gap:6px;">
-          <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Mulai Simulasi
-        </span>
-      </button>
+      <!-- 🟢 KONTROL SIMULASI BARU (MULAI, JEDA, MATIKAN) -->
+      <div style="display: flex; background: var(--control-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 4px; gap: 4px; align-items: center;">
+        <!-- Lampu Indikator & Teks Status -->
+        <div id="simIndicator" class="status-indicator status-ready" style="margin-left: 8px;"></div>
+        <span id="simStatusText" style="font-size: 11px; font-weight: bold; margin-right: 8px; color: var(--text-muted); width: 40px;">MATI</span>
+        <!-- Tombol Mulai (Play) -->
+        <button class="btn btn-primary" id="btnPlay" onclick="startSim()" title="Mulai Simulasi" style="padding: 6px 12px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+        </button>
+        <!-- Tombol Jeda (Pause) - Terkunci secara default -->
+        <button class="btn btn-secondary" id="btnPause" onclick="pauseSim()" title="Jeda Simulasi" style="padding: 6px 12px; opacity: 0.5; cursor: not-allowed;" disabled>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+        </button>
+        <!-- Tombol Matikan (Stop) - Terkunci secara default -->
+        <button class="btn btn-secondary" id="btnStop" onclick="stopSim()" title="Matikan Simulasi" style="padding: 6px 12px; opacity: 0.5; cursor: not-allowed;" disabled>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="none"><rect x="4" y="4" width="16" height="16" rx="2"></rect></svg>
+        </button>
+      </div>
       <button class="btn btn-danger" onclick="clearCanvas()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Clear
       </button>

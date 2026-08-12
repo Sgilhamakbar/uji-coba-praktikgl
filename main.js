@@ -1606,6 +1606,7 @@ function init() {
       });
     }, 300);
   }
+  CircuitStore.hasUnsavedChanges = false;
 
   // 🟢 FIX UTAMA: Kunci Posisi Kanvas saat Layar/Sidebar Berubah Ukuran
   let lastWrapperWidth = wrapper.clientWidth;
@@ -1964,6 +1965,58 @@ document.addEventListener('DOMContentLoaded', () => {
   if (closeMenuBtn) closeMenuBtn.addEventListener('click', toggleMobileMenu);
   if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleMobileMenu);
   if (typeof window.updateSimControlsUI === 'function') window.updateSimControlsUI('STOP');
+
+  // 🟢 --- JEBAKAN KELUAR APLIKASI (PWA EXIT TRAP) --- 🟢
+  
+  // 1. Manipulasi Histori agar tombol "Back" di HP bisa kita cegat
+  history.pushState({ page: 'simulator' }, '', window.location.href);
+
+  window.addEventListener('popstate', (e) => {
+      // Saat pengguna menekan "Back", kita dorong histori lagi agar tidak langsung tertutup
+      history.pushState({ page: 'simulator' }, '', window.location.href);
+      // Panggil Pop-up
+      window.showExitPrompt();
+  });
+  
+  // 2. Cegatan tambahan saat pengguna menutup tab di PC (Desktop Browser)
+  window.addEventListener('beforeunload', (e) => {
+      if (CircuitStore.hasUnsavedChanges) {
+          e.preventDefault();
+          e.returnValue = ''; // Memunculkan peringatan "Unsaved Changes" bawaan peramban
+      }
+  });
+
+  // 3. Logika untuk memanggil Pop-up kita
+  window.showExitPrompt = () => {
+      const modal = document.getElementById('exitModal');
+      const saveBtn = document.getElementById('exitSaveBtn');
+      const msg = document.getElementById('exitMessage');
+      
+      // Deteksi jika ada kabel/komponen yang belum disimpan ke file (Export)
+      if (CircuitStore.hasUnsavedChanges) {
+          msg.textContent = "Rangkaian belum tersimpan! Apakah Anda ingin menyimpan sebelum keluar?";
+          saveBtn.style.display = 'flex'; // Munculkan tombol Simpan
+      } else {
+          msg.textContent = "Apakah Anda yakin ingin keluar dari aplikasi?";
+          saveBtn.style.display = 'none'; // Sembunyikan tombol Simpan
+      }
+      modal.classList.add('show');
+  };
+
+  window.closeExitModal = () => {
+      document.getElementById('exitModal').classList.remove('show');
+  };
+
+  window.confirmExit = () => {
+      CircuitStore.hasUnsavedChanges = false; // Bypass status
+      window.onbeforeunload = null;           // Matikan jebakan tab PC
+      
+      // Eksekusi penutupan PWA (Mundur jauh dari riwayat peramban)
+      history.go(-2); 
+      
+      // Cadangan jika metode histori gagal, coba tutup tab
+      setTimeout(() => { window.close(); }, 300);
+  };
 });
 
 // ─── FITUR HAPUS SEMUA KABEL (SCISSORS) ────────────────────────────────────────

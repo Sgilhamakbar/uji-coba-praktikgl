@@ -839,7 +839,22 @@
   </div>
 </div>
 
- <div class="toast-container" id="toastContainer"></div>
+<div class="toast-container" id="toastContainer"></div>
+<!-- MODAL KELUAR APLIKASI (EXIT PWA) -->
+<div class="modal" id="exitModal">
+  <div class="modal-content" style="max-width: 350px; text-align: center;">
+    <h2 style="justify-content: center; color: var(--danger);">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right: 8px;"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg> 
+      Keluar Aplikasi
+    </h2>
+    <p id="exitMessage" style="margin: 15px 0; font-size: 14px; color: var(--text-main);">Apakah Anda yakin ingin keluar?</p>
+    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 20px;">
+      <button class="btn btn-success" id="exitSaveBtn" onclick="exportCircuit(); closeExitModal();" style="width:100%; justify-content:center;">💾 Simpan Rangkaian</button>
+      <button class="btn btn-danger" onclick="confirmExit()" style="width:100%; justify-content:center;">Keluar</button>
+      <button class="btn btn-secondary" onclick="closeExitModal()" style="width:100%; justify-content:center; background:var(--control-bg); color:var(--text-main);">Batal</button>
+    </div>
+  </div>
+</div>
  
 <script src="src/components/ComponentDefs.js"></script>
 <script src="src/HistoryManager.js"></script>

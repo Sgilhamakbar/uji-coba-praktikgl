@@ -1,7 +1,134 @@
 // File: main.js
 
 // ─── Penghubung Tombol HTML ke Modul ──────────────────────────────────────────
-window.toggleSimulation = () => SimulationEngine.toggle();
+// ─── Penghubung Tombol HTML ke Modul ──────────────────────────────────────────
+
+// 1. Fungsi Pengendali Tampilan Tombol (Auto-Lock)
+window.updateSimControlsUI = (state) => {
+    const btnPlay = document.getElementById('btnPlay');
+    const btnPause = document.getElementById('btnPause');
+    const btnStop = document.getElementById('btnStop');
+    const simStatusText = document.getElementById('simStatusText');
+    const simInd = document.getElementById('simIndicator');
+
+    if (!btnPlay || !btnPause || !btnStop || !simStatusText || !simInd) return;
+
+    const setBtn = (btn, colorClass, isEnabled) => {
+        btn.className = `btn btn-${colorClass}`;
+        btn.style.opacity = isEnabled ? '1' : '0.3';
+        btn.style.cursor = isEnabled ? 'pointer' : 'not-allowed';
+        btn.disabled = !isEnabled; // Mengunci fisik tombol
+    };
+
+    if (state === 'PLAY') {
+        setBtn(btnPlay, 'primary', false); 
+        setBtn(btnPause, 'warning', true);
+        setBtn(btnStop, 'danger', true);
+        simInd.className = 'status-indicator status-active';
+        simInd.style.background = ''; 
+        simStatusText.textContent = 'JALAN';
+        simStatusText.style.color = 'var(--success)';
+    } 
+    else if (state === 'PAUSE') {
+        setBtn(btnPlay, 'primary', true);  
+        setBtn(btnPause, 'warning', false);
+        setBtn(btnStop, 'danger', true);
+        simInd.className = 'status-indicator status-ready';
+        simInd.style.background = '#fbbf24'; 
+        simStatusText.textContent = 'JEDA';
+        simStatusText.style.color = '#fbbf24';
+    } 
+    else { // STOP
+        setBtn(btnPlay, 'primary', true);  
+        setBtn(btnPause, 'secondary', false); 
+        setBtn(btnStop, 'secondary', false);  
+        simInd.className = 'status-indicator status-ready';
+        simInd.style.background = ''; 
+        simStatusText.textContent = 'MATI';
+        simStatusText.style.color = 'var(--text-muted)';
+    }
+};
+
+// 2. Logika Tombol Mulai (Play)
+window.startSim = () => {
+    if (CircuitStore.isSimulationActive) return; 
+    CircuitStore.isSimulationActive = true; 
+    
+    // 🟢 RAHASIA PLAY: Kita nyalakan mesin secara manual tanpa toggle!
+    if (typeof SimulationEngine !== 'undefined') {
+        SimulationEngine.isRunning = true; 
+        SimulationEngine.run(); 
+    }
+    
+    window.updateSimControlsUI('PLAY');
+    UIManager.showToast('▶️ Simulasi Berjalan');
+};
+
+// 3. Logika Tombol Jeda (Pause)
+window.pauseSim = () => {
+    if (!CircuitStore.isSimulationActive) return; 
+    CircuitStore.isSimulationActive = false; 
+    
+    // 🟢 RAHASIA PAUSE: Kita matikan perputaran mesin, TAPI jangan panggil .stop()
+    // Agar voltase yang ada di dalam kabel tetap membeku (tidak jadi 0)!
+    if (typeof SimulationEngine !== 'undefined') {
+        SimulationEngine.isRunning = false; 
+    }
+    
+    window.updateSimControlsUI('PAUSE');
+    UIManager.showToast('⏸️ Simulasi Dijeda');
+};
+
+// 4. Logika Tombol Matikan (Stop)
+window.stopSim = () => {
+    CircuitStore.isSimulationActive = false; 
+    
+    if (typeof SimulationEngine !== 'undefined') {
+        SimulationEngine.isRunning = false;
+        try { SimulationEngine.stop(); } catch(e) {}
+    }
+
+    // 🟢 RAHASIA STOP: Kuras listrik secara paksa & aman (Anti-Crash)
+    CircuitStore.components.forEach(c => {
+        try {
+            c.simV = 0; c.simI = 0; c.outputState = 0;
+            if (Array.isArray(c.inputStates)) c.inputStates.fill(0);
+            if (Array.isArray(c.outStates)) c.outStates.fill(0);
+            if (Array.isArray(c.simI_segs)) c.simI_segs.fill(0);
+            if (Array.isArray(c.vd)) c.vd.fill(0);
+
+            // Jepretkan kembali semua saklar ke posisi mati (0)
+            if (c.type && ['switch', 'switch_spst', 'push_button'].includes(c.type)) {
+                c.state = '0';
+                c.locked = false; 
+                const compEl = document.getElementById(`comp-${c.id}`);
+                if (compEl) compEl.dataset.state = '0';
+            }
+
+            c._lastToggle = 0; 
+            if (c.type && (c.type.startsWith('ff_') || c.type.startsWith('ic_'))) c.logicState = 0;
+
+            if (c.type === 'oscilloscope') {
+                if (Array.isArray(c.history1)) c.history1.fill(0);
+                if (Array.isArray(c.history2)) c.history2.fill(0);
+            }
+
+            const cd = document.getElementById(`content-${c.id}`);
+            if (cd && typeof ComponentDefs !== 'undefined' && typeof ComponentDefs.updateDOMState === 'function') {
+                ComponentDefs.updateDOMState(c.type, c, cd, c.id);
+            }
+        } catch(err) {}
+    });
+
+    try {
+        document.querySelectorAll('#wire-svg path').forEach(p => {
+            p.classList.remove('wire-active', 'wire-12v', 'wire-5v');
+        });
+    } catch(e) {}
+
+    window.updateSimControlsUI('STOP');
+    UIManager.showToast('⏹️ Simulasi Dimatikan');
+};
 window.clearCanvas = clearCanvas;
 
 // Hubungkan HTML ke UIManager
@@ -1275,7 +1402,9 @@ if (wireSvg) wireSvg.querySelectorAll('path').forEach(p => p.remove());
     CircuitStore.components = []; CircuitStore.connections = []; clearSelection(); CircuitStore.connectionStart = null;
     CircuitStore.componentIdCounter = 0;
 
-    if (CircuitStore.isSimulationActive) SimulationEngine.stop();
+    if (CircuitStore.isSimulationActive || typeof SimulationEngine !== 'undefined' && SimulationEngine.isRunning) {
+        window.stopSim();
+    }
     HistoryManager.autoSaveToLocalStorage();
   });
 }
@@ -1834,7 +1963,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (mobileMenuBtn) mobileMenuBtn.addEventListener('click', toggleMobileMenu);
   if (closeMenuBtn) closeMenuBtn.addEventListener('click', toggleMobileMenu);
   if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleMobileMenu);
+  if (typeof window.updateSimControlsUI === 'function') window.updateSimControlsUI('STOP');
 });
+
 // ─── FITUR HAPUS SEMUA KABEL (SCISSORS) ────────────────────────────────────────
 function clearAllWires() {
   // Cek apakah ada kabel

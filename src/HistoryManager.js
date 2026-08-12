@@ -82,6 +82,7 @@ const HistoryManager = {
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = `digital-circuit-${new Date().toISOString().slice(0,10)}.json`;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    CircuitStore.hasUnsavedChanges = false;
     UIManager.showToast('💾 Rangkaian berhasil tersimpan');
   },
 
@@ -122,6 +123,7 @@ const HistoryManager = {
     CircuitStore.redoStack = [];
     this.updateUndoRedoButtons();
     this.autoSaveToLocalStorage();
+    CircuitStore.hasUnsavedChanges = true;
   },
 
   undo() {

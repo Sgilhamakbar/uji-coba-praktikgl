@@ -4,7 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Lab Rangkaian Digital - Build Your Own Circuit V18.2 (Fixed)</title>
-  
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
   <link rel="stylesheet" href="style.css">
 </head>
 
@@ -846,5 +847,32 @@
 <script src="src/engine/SimulationEngine.js"></script>
 <script src="src/UI/UIManager.js"></script>
 <script src="main.js"></script>
+
+<!-- 🟢 SKRIP PENDAFTARAN PWA & SENSOR PEMBARUAN -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').then(registration => {
+        console.log('PWA Service Worker berhasil didaftarkan!');
+        
+        // Sensor jika ada pembaruan versi (Update)
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // Beritahu pengguna dan muat ulang halaman agar versi baru diterapkan
+              if (typeof UIManager !== 'undefined') {
+                 UIManager.showToast('🚀 Pembaruan Aplikasi Tersedia! Memuat ulang...', 3000);
+              }
+              setTimeout(() => window.location.reload(), 3000);
+            }
+          });
+        });
+      }).catch(error => {
+        console.log('PWA Service Worker gagal didaftarkan:', error);
+      });
+    });
+  }
+</script>
 </body>
 </html>

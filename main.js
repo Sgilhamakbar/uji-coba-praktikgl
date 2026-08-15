@@ -532,11 +532,16 @@ function buildComponentElement(compData) {
         e.target.closest('button')) return;
         
     if (e.touches.length === 1) { 
-      e.stopPropagation(); 
-      selectComponent(id); 
-      startTouchDragComponent(e, id); 
-    }
-  }, { passive: false });
+          e.stopPropagation(); 
+          // CEK MODE UNTUK HP: 
+          if (CircuitStore.isSelectMode) {
+              window.toggleComponentSelection(id);
+          } else {
+              selectComponent(id); 
+              startTouchDragComponent(e, id); 
+          }
+        }
+      }, { passive: false });    
 
   div.addEventListener('click', e => {
     if ((type === 'switch_spst' || type === 'switch' || type === 'switch_spdt') && !e.target.classList.contains('delete-btn') && !e.target.classList.contains('connection-point') && !e.target.closest('button')) {

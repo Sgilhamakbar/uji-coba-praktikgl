@@ -1772,9 +1772,21 @@ window.pasteClipboard = function() {
     if (c.y < minY) minY = c.y;
   });
 
-  // Hitung selisih kursor saat ini untuk penempatan Paste
-  const offsetX = globalMouseX - minX;
-  const offsetY = globalMouseY - minY;
+  // 🟢 Hitung selisih lokasi untuk penempatan Paste
+  let pasteX = globalMouseX;
+  let pasteY = globalMouseY;
+  
+  // 🟢 FIX HP/TABLET: Jika menggunakan layar sentuh, letakkan hasil Paste TEPAT di tengah layar saat ini
+  if (window.matchMedia("(hover: none)").matches) {
+      const wrapper = document.getElementById('canvas-wrapper');
+      if (wrapper) {
+          pasteX = (wrapper.scrollLeft + wrapper.clientWidth / 2) / UIManager.currentZoom;
+          pasteY = (wrapper.scrollTop + wrapper.clientHeight / 2) / UIManager.currentZoom;
+      }
+  }
+
+  const offsetX = pasteX - minX;
+  const offsetY = pasteY - minY;
 
   // 1. Munculkan Komponen Baru
   circuitClipboard.components.forEach(oldComp => {

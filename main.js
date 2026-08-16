@@ -499,7 +499,7 @@ function buildComponentElement(compData) {
         e.target.closest('button')) return;
     e.stopPropagation(); 
     
-    // 🟢 CEK MODE: Jika sedang Mode Pilih, ketuk untuk seleksi, BUKAN untuk drag
+    // CEK MODE: Jika sedang Mode Pilih, ketuk untuk seleksi, BUKAN untuk drag
     if (CircuitStore.isSelectMode) {
         window.toggleComponentSelection(id);
     } else {
@@ -517,31 +517,14 @@ function buildComponentElement(compData) {
       e.stopPropagation(); 
       // 🟢 CEK MODE UNTUK HP: 
       if (CircuitStore.isSelectMode) {
+          e.preventDefault(); // 🟢 FIX BUG HP: Blokir klik tidak ada agar seleksi tidak lepas
           window.toggleComponentSelection(id);
       } else {
-          selectComponent(id); 
+          // Jika mode pilih mati, langsung geser komponennya
           startTouchDragComponent(e, id); 
       }
     }
-  }, { passive: false });
-  
-  div.addEventListener('touchstart', e => {
-    if (e.target.closest('.delete-btn') || 
-        e.target.closest('.connection-point') || 
-        e.target.closest('.control-btn') || 
-        e.target.closest('button')) return;
-        
-    if (e.touches.length === 1) { 
-          e.stopPropagation(); 
-          // CEK MODE UNTUK HP: 
-          if (CircuitStore.isSelectMode) {
-              window.toggleComponentSelection(id);
-          } else {
-              selectComponent(id); 
-              startTouchDragComponent(e, id); 
-          }
-        }
-      }, { passive: false });    
+  }, { passive: false }); 
 
   div.addEventListener('click', e => {
     if ((type === 'switch_spst' || type === 'switch' || type === 'switch_spdt') && !e.target.classList.contains('delete-btn') && !e.target.classList.contains('connection-point') && !e.target.closest('button')) {

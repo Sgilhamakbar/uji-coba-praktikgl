@@ -534,90 +534,44 @@ function buildComponentElement(compData) {
   return div;
 }
 // =========================================================
-// SENSOR KLIK GANDA (DESKTOP) & KETUK GANDA (LAYAR SENTUH)
+// SENSOR BUKA PENGATURAN (LONG PRESS HP & KLIK KANAN PC)
 // =========================================================
-
-const canvasArea = document.getElementById('canvas'); 
+const canvasArea = document.getElementById('canvas');
 
 if (canvasArea) {
     const ignoredTypes = ['switch', 'push_button', 'push_button_nc', 'switch_spst', 'switch_spdt'];
-    
-    // 1. SENSOR DESKTOP (Mouse Double Click)
-    canvasArea.addEventListener('dblclick', function(e) {
-        // 🟢 BLOKIR: Jika baru saja menggeser komponen (kurang dari 500ms), abaikan!
-        if (window.lastDragTime && (Date.now() - window.lastDragTime < 500)) return;
+    let pressTimer = null;
 
-        const comp = e.target.closest('[id^="comp-"]');
+    // --- 1. SENSOR LAYAR SENTUH (TAHAN LAMA / LONG PRESS) ---
+    canvasArea.addEventListener('touchstart', function(e) {
+        // Jangan aktif jika menekan tombol panah kecil
         if (e.target.closest('.btn-up, .btn-down, [class*="btn-"]')) return;
         
+        const comp = e.target.closest('.circuit-component');
         if (comp) {
             const compId = comp.id.split('-')[1]; 
             const compType = comp.dataset.type;
             const subType = comp.dataset.subType || ''; 
+            
+            // Hentikan fungsi jika yang ditahan adalah sakelar murni
             if (ignoredTypes.includes(compType)) return;
-            UIManager.openValueModal(compId, compType, subType);
-        }
-    });
 
-    // 2. SENSOR LAYAR SENTUH (Mobile/Tablet Double Tap)
-    let lastTapTime = 0;
-    
-    canvasArea.addEventListener('touchend', function(e) {
-        // 🟢 BLOKIR: Jika baru saja menggeser komponen (kurang dari 500ms), abaikan!
-        if (window.lastDragTime && (Date.now() - window.lastDragTime < 500)) return;
-
-        if (e.target.closest('.btn-up, .btn-down, [class*="btn-"]')) return;
-        const currentTime = new Date().getTime();
-        const tapLength = currentTime - lastTapTime;
-        
-        if (tapLength < 300 && tapLength > 0) {
-            const comp = e.target.closest('[id^="comp-"]');
-            if (comp) {
-                const compId = comp.id.split('-')[1];
-                const compType = comp.dataset.type;
-                const subType = comp.dataset.subType || ''; 
-                if (ignoredTypes.includes(compType)) return;
+            // Mulai hitung waktu (Jari ditahan 600 milidetik)
+            pressTimer = setTimeout(() => {
+                // Beri efek getaran halus jika HP mendukung
+                if (navigator.vibrate) navigator.vibrate(50);
+                // Buka menu pengaturan
                 UIManager.openValueModal(compId, compType, subType);
-                e.preventDefault(); 
-            }
+            }, 600); 
         }
-        lastTapTime = currentTime;
-    });
-}
+    }, { passive: true });
 
-// =========================================================
-// SENSOR KEYBOARD (PINTASAN MODAL SETTING)
-// =========================================================
-document.addEventListener('keydown', function(e) {
-    const valueModal = document.getElementById('valueModal');
-    
-    // Pastikan sensor hanya aktif JIKA menu pengaturan sedang terbuka di layar
-    if (valueModal && valueModal.classList.contains('show')) {
-        
-        // JIKA PENGGUNA MENEKAN 'ENTER' -> Simpan Pengaturan
-        if (e.key === 'Enter') {
-            e.preventDefault(); // Mencegah tombol Enter memicu fungsi lain yang tidak diinginkan
-            
-            // Panggil fungsi simpan (Mendukung pemanggilan via UIManager atau fungsi global)
-            if (typeof UIManager !== 'undefined' && typeof UIManager.saveComponentValue === 'function') {
-                UIManager.saveComponentValue();
-            } else if (typeof saveComponentValue === 'function') {
-                saveComponentValue();
-            }
-        } 
-        
-        // JIKA PENGGUNA MENEKAN 'ESCAPE' -> Tutup/Batal
-        else if (e.key === 'Escape') {
-            e.preventDefault();
-            
-            if (typeof UIManager !== 'undefined' && typeof UIManager.closeValueModal === 'function') {
-                UIManager.closeValueModal();
-            } else if (typeof closeValueModal === 'function') {
-                closeValueModal();
-            }
-        }
-    }
-});
+    // --- 2. PEMBATAL OTOMATIS SAAT DRAG & DROP ---
+    // Jika pengguna menggeser jarinya (drag) atau melepas jarinya sebelum 600ms, BATALKAN hitungan!
+    canvasArea.addEventListener('touchmove', () => { clearTimeout(pressTimer); }, { passive: true });
+    canvasArea.addEventListener('touchend', () => { clearTimeout(pressTimer); });
+    canvasArea.addEventListener('touchcancel', () => { clearTimeout(pressTimer); });
+}
 
 // ─── Connection points ─────────────────────────────────────────────────────────
 function createConnection(srcId, srcPin, tgtId, tgtPin, waypoints = [], srcType = 'output', tgtType = 'input') {
@@ -2241,10 +2195,24 @@ function initContextMenu() {
       return;
     }
 
-    // Jika aman, Tampilkan Menu Copy/Paste tepat di ujung kursor
+    // 🟢 SENSOR KLIK KANAN PADA KOMPONEN -> BUKA PENGATURAN NILAI
+    const comp = e.target.closest('.circuit-component');
+    if (comp) {
+        const ignoredTypes = ['switch', 'push_button', 'push_button_nc', 'switch_spst', 'switch_spdt'];
+        const compId = comp.id.split('-')[1]; 
+        const compType = comp.dataset.type;
+        const subType = comp.dataset.subType || ''; 
+        
+        if (!ignoredTypes.includes(compType)) {
+            menu.style.display = 'none'; // Sembunyikan paksa laci menu Copy/Paste
+            UIManager.openValueModal(compId, compType, subType); // Munculkan layar Pengaturan
+            return; // Hentikan fungsi di sini
+        }
+    }
+
+    // Jika aman (mengklik kanan kanvas kosong), Tampilkan Menu Copy/Paste tepat di ujung kursor
     menu.style.display = 'block';
     menu.style.left = e.clientX + 'px';
-    menu.style.top = e.clientY + 'px';
     
     const rect = menu.getBoundingClientRect();
     if (rect.right > window.innerWidth) menu.style.left = (window.innerWidth - rect.width) + 'px';

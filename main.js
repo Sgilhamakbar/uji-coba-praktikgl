@@ -492,6 +492,7 @@ function buildComponentElement(compData) {
   for (let i = 0; i < outputs; i++) div.appendChild(createConnectionPoint(id, 'output', i, outputs, type));
 
   div.addEventListener('mousedown', e => {
+    if (e.button === 2) return;
     if (e.target.classList.contains('delete-btn') || 
         e.target.classList.contains('connection-point') || 
         e.target.classList.contains('control-btn') || 
@@ -515,25 +516,33 @@ function buildComponentElement(compData) {
         
     if (e.touches.length === 1) { 
       e.stopPropagation(); 
-      // 🟢 CEK MODE UNTUK HP: 
+      // CEK MODE UNTUK HP: 
       if (CircuitStore.isSelectMode) {
-          e.preventDefault(); // 🟢 FIX BUG HP: Blokir klik tidak ada agar seleksi tidak lepas
+          e.preventDefault(); 
           window.toggleComponentSelection(id);
       } else {
-          // 🟢 1. MULAI TIMER TEKAN LAMA DI SINI
+          // 1. MULAI TIMER TEKAN LAMA DI SINI
+          // Ubah angka 500 (milidetik) di bawah jika ingin mengatur lama tekan
           window.longPressTimer = setTimeout(() => {
               const ignoredTypes = ['switch', 'push_button', 'push_button_nc', 'switch_spst', 'switch_spdt'];
               if (!ignoredTypes.includes(type)) {
                   UIManager.openValueModal(id, type, div.dataset.subType || '');
-                  if (navigator.vibrate) navigator.vibrate(50); // Getaran halus sebagai feedback
+                  if (navigator.vibrate) navigator.vibrate(50);
               }
-          }, 500);
+          }, 500); // <--- ATUR LAMA TEKAN DI SINI (Contoh: 800 untuk 0.8 detik)
 
-          // Jika mode pilih mati, langsung geser komponennya
+          // Jika mode pilih mati, langsung siapkan fungsi geser komponen
           startTouchDragComponent(e, id); 
       }
     }
-  }, { passive: false });
+  }, { passive: false }); 
+
+  // 🟢 FIX UTAMA: TAMBAHKAN 3 BARIS INI TEPAT DI BAWAH BLOK touchstart DI ATAS!
+  // Ini memastikan jika jari diangkat (ketuk singkat) atau digeser, Timer LANGSUNG DIBATALKAN.
+  div.addEventListener('touchend', () => clearTimeout(window.longPressTimer));
+  div.addEventListener('touchmove', () => clearTimeout(window.longPressTimer));
+  div.addEventListener('touchcancel', () => clearTimeout(window.longPressTimer));
+
   div.addEventListener('click', e => {
     if ((type === 'switch_spst' || type === 'switch' || type === 'switch_spdt') && !e.target.classList.contains('delete-btn') && !e.target.classList.contains('connection-point') && !e.target.closest('button')) {
       e.stopPropagation(); toggleSwitch(id);
@@ -542,44 +551,75 @@ function buildComponentElement(compData) {
   return div;
 }
 // =========================================================
-// SENSOR BUKA PENGATURAN (LONG PRESS HP & KLIK KANAN PC)
+// SENSOR PENGATURAN KOMPONEN (LONG PRESS MOBILE)
 // =========================================================
-const canvasArea = document.getElementById('canvas');
+const canvasArea = document.getElementById('canvas'); 
 
 if (canvasArea) {
     const ignoredTypes = ['switch', 'push_button', 'push_button_nc', 'switch_spst', 'switch_spdt'];
-    let pressTimer = null;
+    let pressTimer;
 
-    // --- 1. SENSOR LAYAR SENTUH (TAHAN LAMA / LONG PRESS) ---
+    // 1. SENSOR LAYAR SENTUH (Tekan Lama / Long Press)
     canvasArea.addEventListener('touchstart', function(e) {
-        // Jangan aktif jika menekan tombol panah kecil
+        // Abaikan jika menekan tombol kontrol komponen (panah, dll)
         if (e.target.closest('.btn-up, .btn-down, [class*="btn-"]')) return;
         
-        const comp = e.target.closest('.circuit-component');
+        const comp = e.target.closest('[id^="comp-"]');
         if (comp) {
-            const compId = comp.id.split('-')[1]; 
-            const compType = comp.dataset.type;
-            const subType = comp.dataset.subType || ''; 
-            
-            // Hentikan fungsi jika yang ditahan adalah sakelar murni
-            if (ignoredTypes.includes(compType)) return;
-
-            // Mulai hitung waktu (Jari ditahan 600 milidetik)
+            // Mulai penghitung waktu (timer) saat layar disentuh
             pressTimer = setTimeout(() => {
-                // Beri efek getaran halus jika HP mendukung
-                if (navigator.vibrate) navigator.vibrate(50);
-                // Buka menu pengaturan
-                UIManager.openValueModal(compId, compType, subType);
-            }, 600); 
+                const compId = comp.id.split('-')[1]; 
+                const compType = comp.dataset.type;
+                const subType = comp.dataset.subType || ''; 
+                
+                if (!ignoredTypes.includes(compType)) {
+                    UIManager.openValueModal(compId, compType, subType);
+                    // (Opsional) Beri getaran kecil di HP sebagai feedback
+                    if (navigator.vibrate) navigator.vibrate(50);
+                }
+            }, 500); // 500ms adalah standar waktu tekan lama
         }
     }, { passive: true });
 
-    // --- 2. PEMBATAL OTOMATIS SAAT DRAG & DROP ---
-    // Jika pengguna menggeser jarinya (drag) atau melepas jarinya sebelum 600ms, BATALKAN hitungan!
-    canvasArea.addEventListener('touchmove', () => { clearTimeout(pressTimer); }, { passive: true });
-    canvasArea.addEventListener('touchend', () => { clearTimeout(pressTimer); });
-    canvasArea.addEventListener('touchcancel', () => { clearTimeout(pressTimer); });
+    // Batalkan timer jika jari bergeser (sedang nge-drag) atau diangkat
+    canvasArea.addEventListener('touchmove', () => clearTimeout(pressTimer), { passive: true });
+    canvasArea.addEventListener('touchend', () => clearTimeout(pressTimer));
+    canvasArea.addEventListener('touchcancel', () => clearTimeout(pressTimer));
 }
+
+// =========================================================
+// SENSOR KEYBOARD (PINTASAN MODAL SETTING)
+// =========================================================
+document.addEventListener('keydown', function(e) {
+    const valueModal = document.getElementById('valueModal');
+    
+    // Pastikan sensor hanya aktif JIKA menu pengaturan sedang terbuka di layar
+    if (valueModal && valueModal.classList.contains('show')) {
+        
+        // JIKA PENGGUNA MENEKAN 'ENTER' -> Simpan Pengaturan
+        if (e.key === 'Enter') {
+            e.preventDefault(); // Mencegah tombol Enter memicu fungsi lain yang tidak diinginkan
+            
+            // Panggil fungsi simpan (Mendukung pemanggilan via UIManager atau fungsi global)
+            if (typeof UIManager !== 'undefined' && typeof UIManager.saveComponentValue === 'function') {
+                UIManager.saveComponentValue();
+            } else if (typeof saveComponentValue === 'function') {
+                saveComponentValue();
+            }
+        } 
+        
+        // JIKA PENGGUNA MENEKAN 'ESCAPE' -> Tutup/Batal
+        else if (e.key === 'Escape') {
+            e.preventDefault();
+            
+            if (typeof UIManager !== 'undefined' && typeof UIManager.closeValueModal === 'function') {
+                UIManager.closeValueModal();
+            } else if (typeof closeValueModal === 'function') {
+                closeValueModal();
+            }
+        }
+    }
+});
 
 // ─── Connection points ─────────────────────────────────────────────────────────
 function createConnection(srcId, srcPin, tgtId, tgtPin, waypoints = [], srcType = 'output', tgtType = 'input') {
@@ -2170,27 +2210,18 @@ function initContextMenu() {
   canvasWrapper.addEventListener('contextmenu', (e) => {
     e.preventDefault(); // Blokir menu klik kanan bawaan browser
     
-    // 🟢 FITUR BARU: MUNDUR (UNDO TITIK BELOK) DENGAN KLIK KANAN
+    // 1. PRIORITAS UTAMA: MUNDUR (UNDO TITIK BELOK) KABEL
     if (CircuitStore.connectionStart) {
-      
-      // Jika ada memori titik belok, hapus yang paling terakhir (Mundur)
       if (CircuitStore.tempWaypoints && CircuitStore.tempWaypoints.length > 0) {
-          CircuitStore.tempWaypoints.pop(); // Buang titik terakhir
-          
-          // Pancing kursor fiktif agar garis bayangan biru langsung mundur detik itu juga
+          CircuitStore.tempWaypoints.pop(); 
           window.dispatchEvent(new MouseEvent('mousemove', { clientX: e.clientX, clientY: e.clientY }));
-          return; // Hentikan fungsi
+          return; 
       }
-
-      // Jika memori titik belok sudah habis (kembali ke pangkal), batalkan seluruh kabel
       CircuitStore.connectionStart = null;
       CircuitStore.tempWaypoints = []; 
-      
       let tw = document.getElementById('temp-wire-path'); 
-      if (tw) tw.remove(); // Hapus garis biru
-      
+      if (tw) tw.remove(); 
       document.querySelectorAll('.connection-point').forEach(p => p.classList.remove('pending'));
-      
       UIManager.showToast('Koneksi dibatalkan');
       menu.style.display = 'none'; 
       return; 
@@ -2203,24 +2234,25 @@ function initContextMenu() {
       return;
     }
 
-    // 🟢 SENSOR KLIK KANAN PADA KOMPONEN -> BUKA PENGATURAN NILAI
-    const comp = e.target.closest('.circuit-component');
+    // 2. 🟢 SENSOR KLIK KANAN UNTUK PENGATURAN KOMPONEN (DESKTOP)
+    const comp = e.target.closest('[id^="comp-"]');
     if (comp) {
-        const ignoredTypes = ['switch', 'push_button', 'push_button_nc', 'switch_spst', 'switch_spdt'];
-        const compId = comp.id.split('-')[1]; 
+        const compId = comp.id.split('-')[1];
         const compType = comp.dataset.type;
-        const subType = comp.dataset.subType || ''; 
+        const subType = comp.dataset.subType || '';
+        const ignoredTypes = ['switch', 'push_button', 'push_button_nc', 'switch_spst', 'switch_spdt'];
         
         if (!ignoredTypes.includes(compType)) {
-            menu.style.display = 'none'; // Sembunyikan paksa laci menu Copy/Paste
-            UIManager.openValueModal(compId, compType, subType); // Munculkan layar Pengaturan
-            return; // Hentikan fungsi di sini
+            UIManager.openValueModal(compId, compType, subType);
+            menu.style.display = 'none'; // Sembunyikan menu copy/paste
+            return; // Berhenti di sini agar menu pop-up tidak muncul
         }
     }
 
-    // Jika aman (mengklik kanan kanvas kosong), Tampilkan Menu Copy/Paste tepat di ujung kursor
+    // 3. JIKA KLIK DI KANVAS KOSONG -> Tampilkan Menu Copy/Paste/Delete
     menu.style.display = 'block';
     menu.style.left = e.clientX + 'px';
+    menu.style.top = e.clientY + 'px';
     
     const rect = menu.getBoundingClientRect();
     if (rect.right > window.innerWidth) menu.style.left = (window.innerWidth - rect.width) + 'px';

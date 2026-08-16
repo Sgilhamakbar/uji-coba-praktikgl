@@ -537,14 +537,16 @@ function buildComponentElement(compData) {
 // SENSOR KLIK GANDA (DESKTOP) & KETUK GANDA (LAYAR SENTUH)
 // =========================================================
 
-const canvasArea = document.getElementById('canvas'); // Pastikan ID ini sesuai dengan elemen kanvas Anda
+const canvasArea = document.getElementById('canvas'); 
 
 if (canvasArea) {
-  // Masukkan nama komponen yang murni interaktif (tidak butuh menu setting)
     const ignoredTypes = ['switch', 'push_button', 'push_button_nc', 'switch_spst', 'switch_spdt'];
     
     // 1. SENSOR DESKTOP (Mouse Double Click)
     canvasArea.addEventListener('dblclick', function(e) {
+        // 🟢 BLOKIR: Jika baru saja menggeser komponen (kurang dari 500ms), abaikan!
+        if (window.lastDragTime && (Date.now() - window.lastDragTime < 500)) return;
+
         const comp = e.target.closest('[id^="comp-"]');
         if (e.target.closest('.btn-up, .btn-down, [class*="btn-"]')) return;
         
@@ -552,44 +554,37 @@ if (canvasArea) {
             const compId = comp.id.split('-')[1]; 
             const compType = comp.dataset.type;
             const subType = comp.dataset.subType || ''; 
-            
-            // CEK BLOKIR: Jika ini adalah saklar/tombol, hentikan fungsi di sini!
             if (ignoredTypes.includes(compType)) return;
-            
-            // Panggil menu UI Manager
             UIManager.openValueModal(compId, compType, subType);
         }
     });
 
     // 2. SENSOR LAYAR SENTUH (Mobile/Tablet Double Tap)
-   let lastTapTime = 0;
+    let lastTapTime = 0;
     
     canvasArea.addEventListener('touchend', function(e) {
-      if (e.target.closest('.btn-up, .btn-down, [class*="btn-"]')) return;
+        // 🟢 BLOKIR: Jika baru saja menggeser komponen (kurang dari 500ms), abaikan!
+        if (window.lastDragTime && (Date.now() - window.lastDragTime < 500)) return;
+
+        if (e.target.closest('.btn-up, .btn-down, [class*="btn-"]')) return;
         const currentTime = new Date().getTime();
         const tapLength = currentTime - lastTapTime;
         
         if (tapLength < 300 && tapLength > 0) {
             const comp = e.target.closest('[id^="comp-"]');
-            
             if (comp) {
                 const compId = comp.id.split('-')[1];
                 const compType = comp.dataset.type;
                 const subType = comp.dataset.subType || ''; 
-                
-                // CEK BLOKIR: Jika ini adalah saklar/tombol, hentikan fungsi di sini!
                 if (ignoredTypes.includes(compType)) return;
-                
                 UIManager.openValueModal(compId, compType, subType);
-                
-                // Cegah zoom-in layar HP
                 e.preventDefault(); 
             }
         }
-        
         lastTapTime = currentTime;
     });
 }
+
 // =========================================================
 // SENSOR KEYBOARD (PINTASAN MODAL SETTING)
 // =========================================================
@@ -1278,11 +1273,11 @@ function startDragComponent(e, compId) {
     document.removeEventListener('mousemove', onMove);
     document.removeEventListener('mouseup', onUp);
     if (moved) {
+      window.lastDragTime = Date.now();
       dragGroup.forEach(item => {
         const cd = CircuitStore.components.find(c => c.id === item.id);
         if (cd) { cd.x = parseFloat(item.el.style.left) || 0; cd.y = parseFloat(item.el.style.top) || 0; }
       });
-      // 🟢 3. HAPUS KODE PEREKAMAN LAMBAT (TIMEOUT) DI SINI
     }
   }
   document.addEventListener('mousemove', onMove);
@@ -1374,15 +1369,15 @@ function startTouchDragComponent(e, compId) {
     }
   }
   
-  function onEnd() {
-    document.removeEventListener('touchmove', onMove);
-    document.removeEventListener('touchend', onEnd);
+  function onUp() {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
     if (moved) {
+      window.lastDragTime = Date.now();
       dragGroup.forEach(item => {
         const cd = CircuitStore.components.find(c => c.id === item.id);
-        if (cd) { cd.x = parseFloat(item.el.style.left)||0; cd.y = parseFloat(item.el.style.top)||0; }
+        if (cd) { cd.x = parseFloat(item.el.style.left) || 0; cd.y = parseFloat(item.el.style.top) || 0; }
       });
-      // 🟢 3. HAPUS KODE PEREKAMAN LAMBAT (TIMEOUT) DI SINI
     }
   }
   document.addEventListener('touchmove', onMove, { passive: false });

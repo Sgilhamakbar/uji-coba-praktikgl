@@ -1273,7 +1273,6 @@ function startDragComponent(e, compId) {
     document.removeEventListener('mousemove', onMove);
     document.removeEventListener('mouseup', onUp);
     if (moved) {
-      window.lastDragTime = Date.now();
       dragGroup.forEach(item => {
         const cd = CircuitStore.components.find(c => c.id === item.id);
         if (cd) { cd.x = parseFloat(item.el.style.left) || 0; cd.y = parseFloat(item.el.style.top) || 0; }
@@ -1369,14 +1368,13 @@ function startTouchDragComponent(e, compId) {
     }
   }
   
-  function onUp() {
-    document.removeEventListener('mousemove', onMove);
-    document.removeEventListener('mouseup', onUp);
+  function onEnd() {
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onEnd);
     if (moved) {
-      window.lastDragTime = Date.now();
       dragGroup.forEach(item => {
         const cd = CircuitStore.components.find(c => c.id === item.id);
-        if (cd) { cd.x = parseFloat(item.el.style.left) || 0; cd.y = parseFloat(item.el.style.top) || 0; }
+        if (cd) { cd.x = parseFloat(item.el.style.left)||0; cd.y = parseFloat(item.el.style.top)||0; }
       });
     }
   }

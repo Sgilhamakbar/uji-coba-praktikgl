@@ -520,12 +520,20 @@ function buildComponentElement(compData) {
           e.preventDefault(); // 🟢 FIX BUG HP: Blokir klik tidak ada agar seleksi tidak lepas
           window.toggleComponentSelection(id);
       } else {
+          // 🟢 1. MULAI TIMER TEKAN LAMA DI SINI
+          window.longPressTimer = setTimeout(() => {
+              const ignoredTypes = ['switch', 'push_button', 'push_button_nc', 'switch_spst', 'switch_spdt'];
+              if (!ignoredTypes.includes(type)) {
+                  UIManager.openValueModal(id, type, div.dataset.subType || '');
+                  if (navigator.vibrate) navigator.vibrate(50); // Getaran halus sebagai feedback
+              }
+          }, 500);
+
           // Jika mode pilih mati, langsung geser komponennya
           startTouchDragComponent(e, id); 
       }
     }
-  }, { passive: false }); 
-
+  }, { passive: false });
   div.addEventListener('click', e => {
     if ((type === 'switch_spst' || type === 'switch' || type === 'switch_spdt') && !e.target.classList.contains('delete-btn') && !e.target.classList.contains('connection-point') && !e.target.closest('button')) {
       e.stopPropagation(); toggleSwitch(id);

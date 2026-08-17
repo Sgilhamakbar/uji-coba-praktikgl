@@ -196,11 +196,10 @@ const SimulationEngine = {
             addEdge(srcId, tgtId);
         });
     }
-
         // Gabungkan pin-pin internal komponen wire/junction
         if (CircuitStore.components) {
             CircuitStore.components.forEach(comp => {
-                if (comp.type === 'wire_1to1' || comp.type === 'wire_1to2' || comp.type === 'junction') {
+                if (comp.type === 'wire_1to1' || comp.type === 'wire_1to2' || comp.type === 'junction' || comp.type === 'wire_node') {
                     const pins = [];
                     for (let i = 0; i < (comp.inputs || 0); i++) pins.push(getPinId(comp.id, 'input', i));
                     for (let i = 0; i < (comp.outputs || 0); i++) pins.push(getPinId(comp.id, 'output', i));
@@ -211,7 +210,6 @@ const SimulationEngine = {
                 }
             });
         }
-
         // Graph Traversal untuk mengelompokkan node
         const visited = new Set();
         

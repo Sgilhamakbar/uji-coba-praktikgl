@@ -305,8 +305,12 @@ body {
 .circuit-component[data-type="bjt_npn"] .rotate-btn,
 .circuit-component[data-type="bjt_pnp"] .rotate-btn,
 .circuit-component[data-type="push_button_nc"] .rotate-btn { top: auto; bottom: -8px; }
+.circuit-component[data-type="wire_node"] .rotate-btn,
 
-
+/* B. Menyembunyikan pin kelistrikan khusus pada Titik Solder (wire_node) */
+.circuit-component[data-type="wire_node"] .connection-point {
+    opacity: 0; /* Membuat pin merah/hijau menjadi tembus pandang */
+}
   /* ==========================================================================
    7. MEDIA QUERIES (DESKTOP & MOBILE RESPONSIVE)
    ========================================================================== */

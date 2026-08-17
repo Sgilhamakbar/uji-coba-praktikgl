@@ -5,7 +5,7 @@ const ComponentDefs = {
     const map = {
       led: [60, 60], diode: [60, 40], logic_probe: [60, 40], switch: [60, 40], push_button: [70, 60], push_button_nc: [70, 60], switch_spst: [80, 40], switch_spdt: [80, 60],
       fuse: [80, 40], ground: [40, 40], relay: [80, 80], relay_5pin: [80, 100], diode_bridge: [140, 140], 
-      junction: [60, 60], wire_1to1: [60, 40], wire_1to2: [60, 60],
+      junction: [60, 60], wire_1to1: [60, 40], wire_1to2: [60, 60], wire_node: [20, 20],
       and: [80, 60], or: [80, 60], not: [80, 60], nand: [80, 60], nor: [80, 60], xor: [80, 60], xnor: [80, 60],
       bjt_npn: [80, 80], bjt_pnp: [80, 80],     
       transformer: [100, 100], ff_sr: [80, 90], ff_d: [80, 80], ff_jk: [80, 90], ff_t: [80, 80],
@@ -1255,6 +1255,10 @@ const ComponentDefs = {
           <line class="pin-out-1" x1="30" y1="30" x2="60" y2="30" stroke="#006600" stroke-width="4"/>
           <line class="pin-out-2" x1="30" y1="30" x2="60" y2="50" stroke="#006600" stroke-width="4"/>
           <circle cx="30" cy="30" r="4" fill="#000000"/>
+        </svg>`; break;
+      case 'wire_node':
+        svg = `<svg width="20" height="20" viewBox="0 0 20 20" style="display:block; position:absolute; top:0; left:0;">
+          <circle class="anim-body" cx="10" cy="10" r="6" fill="#1e293b" stroke="#334155" stroke-width="2"/>
         </svg>`; break;
       case 'wire_1to1':
         svg = `<svg width="60" height="40" viewBox="0 0 60 40">
@@ -2832,6 +2836,11 @@ const ComponentDefs = {
             const hasPower = (compData.inputStates[2] >= 5.0 || compData.inputStates[3] <= -5.0);
             body.setAttribute('fill', hasPower ? '#1e293b' : '#0f172a');
         }
+        break;
+      }
+      case 'wire_node': {
+        const dot = contentDiv.querySelector('.anim-body');
+        if (dot) dot.setAttribute('fill', vState ? '#22c55e' : '#1e293b');
         break;
       }
       case 'junction':

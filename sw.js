@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lab-listrik-v4.2.6';
+const CACHE_NAME = 'lab-listrik-v4.3';
 
 // Daftar semua file yang menyusun aplikasi Anda
 const urlsToCache = [

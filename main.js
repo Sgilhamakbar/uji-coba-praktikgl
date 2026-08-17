@@ -733,6 +733,7 @@ function createConnectionPoint(compId, pinType, index, total, compType) {
     case 'clock_pulse':   x = 60; y = 20; break;
     case 'push_button': case 'push_button_nc': x = pinType === 'input' ? 0 : 70; y = 30; break;
     case 'junction':      x = pinType === 'input' ? 0 : 60; y = pinType === 'input' ? 30 : (index === 0 ? 10 : index === 1 ? 30 : 50); break;
+    case 'wire_node': x = 10; y = 10; break;
     case 'wire_1to1':     x = pinType === 'input' ? 0 : 60; y = 20; break;
     case 'wire_1to2':     x = pinType === 'input' ? 0 : 60; y = pinType === 'input' ? 30 : (index === 0 ? 15 : 45); break;
     case 'opamp':         if (pinType === 'input') { x = 0; y = index === 0 ? 18 : 42; } else { x = 80; y = 30; } break;
@@ -989,7 +990,7 @@ function handleConnectionClick(compId, type, index) {
   if (tgtIsInput) {
     let allowMultipleInputs = false;
     const targetComp = CircuitStore.components.find(c => c.id === tgtId);
-    const allowedTypes = ['ground', 'power_terminal', 'junction', 'resistor', 'capacitor', 'led', 'diode', 'diode_bridge', 'ammeter', 'voltmeter', 'oscilloscope', 'motor_dc', 'solenoid', 'relay', 'relay_5pin', 'ohmmeter'];
+    const allowedTypes = ['ground', 'power_terminal', 'junction', 'wire_node', 'resistor', 'capacitor', 'led', 'diode', 'diode_bridge', 'ammeter', 'voltmeter', 'oscilloscope', 'motor_dc', 'solenoid', 'relay', 'relay_5pin', 'ohmmeter'];
     if (targetComp && allowedTypes.includes(targetComp.type)) allowMultipleInputs = true;
 
     if (!allowMultipleInputs) {
@@ -1026,6 +1027,59 @@ function handleConnectionClick(compId, type, index) {
   UIManager.showToast('Kabel terhubung!');
 }
 
+// =========================================================
+// FITUR PERCABANGAN KABEL OTOMATIS (NODAL BRANCHING)
+// =========================================================
+window.splitWireToNode = function(wireId, x, y) {
+    const conn = CircuitStore.connections.find(c => c.id === wireId);
+    if (!conn) return;
+
+    if (typeof HistoryManager !== 'undefined') {
+        HistoryManager.saveStateToUndoStack('Membuat Percabangan Node');
+    }
+
+    // 1. Hitung titik kordinat yang dipaskan ke Grid (Snap to Grid)
+    const GRID_SIZE = 10;
+    const snapX = Math.round(x / GRID_SIZE) * GRID_SIZE;
+    const snapY = Math.round(y / GRID_SIZE) * GRID_SIZE;
+
+    // 2. Buat Komponen "Node Cabang" (Junction) secara gaib di koordinat tersebut
+    const jId = ++CircuitStore.componentIdCounter;
+    const compData = {
+        id: jId, type: 'junction', inputs: 1, outputs: 3,
+        x: snapX, y: snapY, state: '0',
+        inputStates: [0], outputState: 0, simV: 0, simI: 0
+    };
+
+    const div = buildComponentElement(compData);
+    document.getElementById('canvas').appendChild(div);
+    CircuitStore.addComponent({ ...compData, element: div });
+
+    // 3. Simpan data ujung sumber dan target dari kabel lama
+    const src = { ...conn.source };
+    const tgt = { ...conn.target };
+
+    // 4. Hapus kabel lama yang utuh
+    CircuitStore.removeConnection(src.compId, src.pinIndex, tgt.compId, tgt.pinIndex);
+
+    // 5. Jahit kembali: Sambungkan sumber asli ke input Node Cabang
+    createConnection(src.compId, src.pinIndex, jId, 0, [], src.type, 'input');
+
+    // 6. Jahit kembali: Sambungkan Output 0 Node Cabang ke target asli
+    createConnection(jId, 0, tgt.compId, tgt.pinIndex, [], 'output', tgt.type);
+
+    // Sekarang, pengguna memiliki Pin Output 1 dan Output 2 yang BEBAS di Node tersebut
+    // untuk menarik cabang kabel ke komponen lain!
+
+    // Perbarui layar
+    drawConnections();
+    updateConnectionPointVisuals();
+    if (CircuitStore.isSimulationActive) SimulationEngine.run();
+    
+    if (typeof UIManager !== 'undefined') {
+        UIManager.showToast('🔗 Titik percabangan (Node) berhasil dibuat!');
+    }
+};
 
 // ─── Draw connections (Advanced Smart Routing) ────────────────────────────────
 function getPinPosition(compId, pinType, pinIndex) {
@@ -1139,17 +1193,146 @@ function drawConnections() {
     if (!path) {
         path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('fill', 'none');
-        path.setAttribute('data-wire-id', conn.id); // 🟢 Set Atribut data-wire-id
+        path.setAttribute('data-wire-id', conn.id); 
         path.style.pointerEvents = 'stroke'; 
         path.style.cursor = 'pointer';
 
-        const handleDel = (e) => { 
+        // Sensor Klik Biasa (Menghapus Kabel)
+        const handleWireInteract = (e) => { 
             e.stopPropagation(); e.preventDefault(); 
-            UIManager.showConfirmToast('Hapus kabel ini?', () => { deleteConnection(+path.dataset.sId, +path.dataset.sIdx, +path.dataset.tId, +path.dataset.tIdx); }); 
+            
+            const sId = +path.dataset.sId; const sIdx = +path.dataset.sIdx; const sType = path.dataset.sType;
+            const tId = +path.dataset.tId; const tIdx = +path.dataset.tIdx; const tType = path.dataset.tType;
+
+            if (CircuitStore.connectionStart) {
+                // FITUR SMART SPLICING (Menyambung Kabel ke Kabel)
+                const canvas = document.getElementById('canvas');
+                const cr = canvas.getBoundingClientRect();
+                let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                // Magnet ke grid terdekat (Kelipatan 10)
+                let mx = Math.round(((clientX - cr.left) / UIManager.currentZoom) / 10) * 10;
+                let my = Math.round(((clientY - cr.top) / UIManager.currentZoom) / 10) * 10;
+
+                HistoryManager.saveStateToUndoStack('Menyambung kabel ke kabel');
+
+                // 1. Ekstrak rute belokan (waypoints) dari kabel lama agar tidak berantakan
+                let wpA = [], wpB = [];
+                const oldConn = CircuitStore.connections.find(c => c.id === path.getAttribute('data-wire-id'));
+                if (oldConn && oldConn.waypoints && oldConn.waypoints.length > 0) {
+                    let sp = getPinPosition(sId, sType, sIdx) || {x: mx, y: my};
+                    let tp = getPinPosition(tId, tType, tIdx) || {x: mx, y: my};
+                    let pts = [sp, ...oldConn.waypoints, tp];
+                    let splitIdx = 0;
+                    for (let i = 0; i < pts.length - 1; i++) {
+                        let p1 = pts[i], p2 = pts[i+1];
+                        let minX = Math.min(p1.x, p2.x), maxX = Math.max(p1.x, p2.x);
+                        let minY = Math.min(p1.y, p2.y), maxY = Math.max(p1.y, p2.y);
+                        // Toleransi 15px agar deteksi klik kabel akurat
+                        if (mx >= minX - 15 && mx <= maxX + 15 && my >= minY - 15 && my <= maxY + 15) {
+                            splitIdx = i; break;
+                        }
+                    }
+                    wpA = oldConn.waypoints.slice(0, splitIdx);
+                    wpB = oldConn.waypoints.slice(splitIdx);
+                }
+
+                // 2. Potong/Hapus kabel lama
+                CircuitStore.removeConnection(sId, sIdx, tId, tIdx);
+
+                // 3. Buat Komponen Titik Solder (wire_node) persis di posisi klik
+                const jId = ++CircuitStore.componentIdCounter;
+                const compData = {
+                    id: jId, type: 'wire_node', inputs: 4, outputs: 0, 
+                    x: mx - 10, y: my - 10, // Dimensi 20x20, geser -10 agar tepat di tengah kursor
+                    state: '0', inputStates: [0,0,0,0], outputState: 0, simV: 0, simI: 0
+                };
+                const div = buildComponentElement(compData);
+                document.getElementById('canvas').appendChild(div);
+                CircuitStore.addComponent({ ...compData, element: div });
+
+                // 4. Sambungkan pecahan kabel lama ke Titik Solder
+                createConnection(sId, sIdx, jId, 0, wpA, sType, 'input');
+                createConnection(jId, 1, tId, tIdx, wpB, 'input', tType);
+
+                // 5. Sambungkan kabel baru yang sedang ditarik ke Titik Solder
+                const startNode = CircuitStore.connectionStart;
+                let finalWp = CircuitStore.tempWaypoints ? [...CircuitStore.tempWaypoints] : [];
+                
+                // Berikan sudut siku otomatis jika rutenya tidak rata
+                if (finalWp.length > 0) {
+                    let lastWp = finalWp[finalWp.length - 1];
+                    if (lastWp.x !== mx && lastWp.y !== my) {
+                        if (Math.abs(mx - lastWp.x) > Math.abs(my - lastWp.y)) finalWp.push({ x: mx, y: lastWp.y });
+                        else finalWp.push({ x: lastWp.x, y: my });
+                    }
+                }
+                
+                let cSrcId, cSrcPin, cSrcType, cTgtId, cTgtPin, cTgtType;
+                if (startNode.type === 'output') {
+                    cSrcId = startNode.compId; cSrcPin = startNode.index; cSrcType = 'output';
+                    cTgtId = jId; cTgtPin = 2; cTgtType = 'input';
+                } else {
+                    cSrcId = jId; cSrcPin = 2; cSrcType = 'input';
+                    cTgtId = startNode.compId; cTgtPin = startNode.index; cTgtType = 'input';
+                    finalWp.reverse();
+                }
+                createConnection(cSrcId, cSrcPin, cTgtId, cTgtPin, finalWp, cSrcType, cTgtType);
+
+                // 6. Bersihkan UI (Kabel Bayangan dan Kursor)
+                CircuitStore.connectionStart = null; CircuitStore.tempWaypoints = [];
+                let tw = document.getElementById('temp-wire-path'); if(tw) tw.remove();
+                document.querySelectorAll('.connection-point').forEach(p => p.classList.remove('pending'));
+                
+                UIManager.showToast('🔗 Kabel berhasil ditumpuk (Spliced)!');
+            } else {
+                // JIKA HANYA MENGKLIK BIASA -> Mode Hapus Biasa
+                UIManager.showConfirmToast('Hapus kabel ini?', () => { deleteConnection(sId, sIdx, tId, tIdx); }); 
+            }
         };
-        path.addEventListener('click', handleDel); 
-        path.addEventListener('touchstart', handleDel, {passive: false});
         
+        // Tautkan Event Listener baru ke visual kabel SVG
+        path.addEventListener('click', handleWireInteract); 
+        path.addEventListener('touchstart', handleWireInteract, {passive: false});
+
+        // 🟢 SENSOR KLIK GANDA: Membuat Percabangan Nodal
+        const handleSplit = (e) => {
+            e.stopPropagation(); e.preventDefault();
+            
+            // Tutup toast konfirmasi hapus kabel jika sempat terbuka karena klik pertama
+            const ct = document.querySelector('.confirm-toast'); 
+            if (ct) ct.remove();
+
+            const canvas = document.getElementById('canvas');
+            const cr = canvas.getBoundingClientRect();
+            
+            // Dapatkan kordinat sentuhan/mouse
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            const x = (clientX - cr.left) / UIManager.currentZoom;
+            const y = (clientY - cr.top) / UIManager.currentZoom;
+            
+            // Buat Node Cabang tepat di titik kabel yang diklik (dikurangi 30px agar jatuh pas di tengah komponennya)
+            window.splitWireToNode(conn.id, x - 30, y - 30); 
+        };
+
+        // Pasang pendengar klik ganda (Mouse PC)
+        path.addEventListener('dblclick', handleSplit);
+
+        // Pasang pendengar sentuh untuk layar sentuh (HP) - Double Tap
+        let lastWireTap = 0;
+        path.addEventListener('touchend', (e) => {
+            const currentTime = new Date().getTime();
+            const tapLength = currentTime - lastWireTap;
+            if (tapLength < 300 && tapLength > 0) {
+                handleSplit(e); // Ketuk ganda terdeteksi!
+            } else {
+                handleDel(e);   // Ketuk tunggal biasa (Tampilkan menu hapus)
+            }
+            lastWireTap = currentTime;
+        }, {passive: false});
+
         svg.appendChild(path);
     }
 

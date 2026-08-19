@@ -141,8 +141,9 @@ openValueModal(compId, compType, subType) {
     const ntcInputGroup = document.getElementById('ntcInputGroup');
     const ptcInputGroup = document.getElementById('ptcInputGroup');
     const clockInputGroup = document.getElementById('clockInputGroup');
+    const vsineInputGroup = document.getElementById('vsineInputGroup');
 
-    const hideText = ['ldr', 'thermistor_ntc', 'thermistor_ptc', 'led', 'motor_dc', 'opamp', 'clock_pulse'].includes(compType);   
+    const hideText = ['ldr', 'thermistor_ntc', 'thermistor_ptc', 'led', 'motor_dc', 'opamp', 'clock_pulse', 'vsine'].includes(compType);
     const opampInputGroup = document.getElementById('opampInputGroup');
     
     if (textInputGroup) textInputGroup.style.display = hideText ? 'none' : 'flex';
@@ -154,7 +155,8 @@ openValueModal(compId, compType, subType) {
     if (ntcInputGroup) ntcInputGroup.style.display = compType === 'thermistor_ntc' ? 'flex' : 'none';
     if (ptcInputGroup) ptcInputGroup.style.display = compType === 'thermistor_ptc' ? 'flex' : 'none';
     if (clockInputGroup) clockInputGroup.style.display = compType === 'clock_pulse' ? 'flex' : 'none';
-
+    if (vsineInputGroup) vsineInputGroup.style.display = compType === 'vsine' ? 'flex' : 'none';
+    
     if (compType === 'led') {
         document.getElementById('ledForwardV').value = compData.forwardV !== undefined ? compData.forwardV : 2.2;
         document.getElementById('ledFullDriveI').value = compData.fullDriveI !== undefined ? compData.fullDriveI : 10;
@@ -168,6 +170,11 @@ openValueModal(compId, compType, subType) {
     } else if (compType === 'opamp') {
         document.getElementById('opampPosRail').value = compData.posRail !== undefined ? compData.posRail : 15;
         document.getElementById('opampNegRail').value = compData.negRail !== undefined ? compData.negRail : -15;
+    } else if (compType === 'vsine') {
+        document.getElementById('vsineAmp').value = compData.customValue !== undefined ? compData.customValue : 12;
+        document.getElementById('vsineFreq').value = compData.freqValue !== undefined ? compData.freqValue : 1;
+        document.getElementById('vsineOffset').value = compData.dcOffset !== undefined ? compData.dcOffset : 0;
+        document.getElementById('vsineDelay').value = compData.timeDelay !== undefined ? compData.timeDelay : 0;
     }
     if (compType === 'thermistor_ntc') {
         document.getElementById('ntcR25').value = compData.r25 !== undefined ? compData.r25 : 10000;
@@ -275,8 +282,11 @@ openValueModal(compId, compType, subType) {
     const compData = CircuitStore.components.find(c => c.id === compId);
     const comp = document.getElementById(`comp-${compId}`);
 
+    // 🟢 1. REKAM DATA LAMA SEBELUM DIUBAH (Deep Copy)
+    const oldData = JSON.parse(JSON.stringify({ ...compData, element: undefined }));
+
     let raw, unit;
-    if (!['ldr', 'thermistor_ntc', 'thermistor_ptc', 'led', 'motor_dc', 'opamp', 'clock_pulse'].includes(compType)) {
+    if (!['ldr', 'thermistor_ntc', 'thermistor_ptc', 'led', 'motor_dc', 'opamp', 'clock_pulse', 'vsine'].includes(compType)) {
       raw = parseFloat(document.getElementById('compValue').value);
       const unitSelect = document.getElementById('compUnit');
       unit = unitSelect ? (parseFloat(unitSelect.value) || 1) : 1;
@@ -289,52 +299,47 @@ openValueModal(compId, compType, subType) {
         const fv = parseFloat(document.getElementById('ledForwardV').value);
         if (isNaN(fv) || fv < 0) return this.showToast('Masukkan nilai LED yang valid!');
     }
+    else if (compType === 'vsine') {
+        const amp = parseFloat(document.getElementById('vsineAmp').value);
+        const freq = parseFloat(document.getElementById('vsineFreq').value);
+        const offset = parseFloat(document.getElementById('vsineOffset').value);
+        const delay = parseFloat(document.getElementById('vsineDelay').value);
+        if (isNaN(amp) || isNaN(freq) || isNaN(offset) || isNaN(delay)) return this.showToast('Masukkan angka yang valid untuk V-Sine!');
+        if (freq <= 0) return this.showToast('Error: Frekuensi harus lebih dari 0 Hz!');
+        if (amp < 0) return this.showToast('Error: Amplitudo tidak boleh minus!');
+        compData.customValue = amp; compData.freqValue = freq; compData.dcOffset = offset; compData.timeDelay = delay;
+    }
     else if (compType === 'thermistor_ntc') {
         const r25 = parseFloat(document.getElementById('ntcR25').value);
         const beta = parseFloat(document.getElementById('ntcBeta').value);
         if (isNaN(r25) || isNaN(beta) || r25 <= 0) return this.showToast('Error: Nilai R25 harus lebih dari 0 Ohm!');
-        compData.r25 = r25;
-        compData.beta = beta;
+        compData.r25 = r25; compData.beta = beta;
     } 
     else if (compType === 'thermistor_ptc') {
         const r25 = parseFloat(document.getElementById('ptcR25').value);
         const alpha = parseFloat(document.getElementById('ptcAlpha').value);
         if (isNaN(r25) || isNaN(alpha) || r25 <= 0) return this.showToast('Error: Nilai R25 harus lebih dari 0 Ohm!');
-        compData.r25 = r25;
-        compData.alpha = alpha;
+        compData.r25 = r25; compData.alpha = alpha;
     }
     else if (compType === 'clock_pulse') {
         const freq = parseFloat(document.getElementById('clockFreq').value);
         if (isNaN(freq) || freq <= 0) return this.showToast('Error: Frekuensi harus lebih dari 0 Hz!');
-        
         compData.freqValue = freq;
         compData.initialState = document.getElementById('clockInitial').value;
-        
-        // Terapkan Initial State seketika jika simulasi sedang mati
-        if (!CircuitStore.isSimulationActive) {
-            compData.state = compData.initialState;
-        }
+        if (!CircuitStore.isSimulationActive) compData.state = compData.initialState;
     }
     
-    HistoryManager.saveStateToUndoStack(`Mengubah parameter ${compType}`);
-    
+    // 🟢 2. TERAPKAN PERUBAHAN KE COMPDATA
     if (['potentiometer', 'ldr', 'thermistor_ntc', 'thermistor_ptc'].includes(compType)) {
       compData.state = document.getElementById('compSlider').value;
-      if (compType === 'potentiometer') {
-          compData.customValue = raw * unit;
-      }
+      if (compType === 'potentiometer') compData.customValue = raw * unit;
     } else if (compType === 'led') {
-      // Simpan Pilihan Warna
       const ledColorSelect = document.getElementById('ledColor');
       if (ledColorSelect) compData.color = ledColorSelect.value;
       compData.forwardV = parseFloat(document.getElementById('ledForwardV').value);
       compData.fullDriveI = parseFloat(document.getElementById('ledFullDriveI').value);
       compData.breakdownV = parseFloat(document.getElementById('ledBreakdownV').value);
-      // Logika reparasi (Jika LED gosong/meledak, pulihkan)
-      if (compData.state === 'blown') {
-          compData.state = '0';
-          if (comp) comp.dataset.state = '0';
-      }
+      if (compData.state === 'blown') { compData.state = '0'; if (comp) comp.dataset.state = '0'; }
     } else if (compType === 'motor_dc') {
       compData.ratedV = parseFloat(document.getElementById('motorRatedV').value);
       compData.maxRpm = parseFloat(document.getElementById('motorMaxRPM').value);
@@ -342,35 +347,30 @@ openValueModal(compId, compType, subType) {
     } else if (compType === 'opamp') {
         const pr = parseFloat(document.getElementById('opampPosRail').value);
         const nr = parseFloat(document.getElementById('opampNegRail').value);
-        // Validasi fisik: V+ harus selalu lebih besar dari V-
-        if (isNaN(pr) || isNaN(nr) || pr <= nr) {
-            return this.showToast('Error: V+ (Positif) harus lebih besar dari V- (Negatif)!');
-        }     
-        compData.posRail = pr;
-        compData.negRail = nr;
+        if (isNaN(pr) || isNaN(nr) || pr <= nr) return this.showToast('Error: V+ (Positif) harus lebih besar dari V- (Negatif)!');
+        compData.posRail = pr; compData.negRail = nr;
+    } else if (compType === 'vsine' || compType === 'clock_pulse') {    
     } else {
-     let finalVal = raw * unit;
-      // Tambahkan 'power_terminal' ke dalam array pengecekan ini:
-      if (!['fuse', 'battery', 'battery_1cell', 'battery_multi', 'power_terminal', 'capacitor'].includes(compType)) {
-          finalVal = Math.round(finalVal);
-      }
+      let finalVal = raw * unit;
+      if (!['fuse', 'battery', 'battery_1cell', 'battery_multi', 'power_terminal', 'capacitor'].includes(compType)) finalVal = Math.round(finalVal);
       if (compType === 'voltage_divider') {
-          const subType = CircuitStore.currentEditingComponent.subType;
-          if (subType === 'r1') compData.r1Value = finalVal;
+          if (CircuitStore.currentEditingComponent.subType === 'r1') compData.r1Value = finalVal;
           else compData.r2Value = finalVal;
-      } else {
-          compData.customValue = finalVal;
-      }
-      
+      } else { compData.customValue = finalVal; }
       if ((compData.type === 'fuse' || compData.type === 'led') && compData.state === 'blown') {
-        compData.state = '0';
-        if (comp) comp.dataset.state = '0'; 
+        compData.state = '0'; if (comp) comp.dataset.state = '0'; 
       }
     }
 
     if (comp && compData) {
       const cd = document.getElementById(`content-${compId}`);
       if (cd) ComponentDefs.updateContent(compData.type, compId, compData, cd, comp);
+    }
+    
+    // 🟢 3. REKAM DATA BARU & MASUKKAN KE MESIN COMMAND PATTERN
+    if (typeof HistoryManager !== 'undefined' && !CircuitStore.isUndoRedoOp) {
+        const newData = JSON.parse(JSON.stringify({ ...compData, element: undefined }));
+        HistoryManager.pushCommand('CHANGE_PARAM', { compId, oldData, newData }, `Ubah ${compType}`);
     }
     
     this.closeValueModal();

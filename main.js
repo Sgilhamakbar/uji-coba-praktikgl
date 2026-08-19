@@ -1568,12 +1568,8 @@ function startTouchDragComponent(e, compId) {
   }
   
   function onEnd() {
-    document.removeEventListener('mousemove', onMove);
-    document.removeEventListener('mouseup', onUp);
-    
-    // Sama juga untuk onEnd() di startTouchDragComponent:
-    // document.removeEventListener('touchmove', onMove);
-    // document.removeEventListener('touchend', onEnd);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onEnd);
     
     if (moved) {
       let moveData = { components: [], connections: [] };

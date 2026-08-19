@@ -1,7 +1,139 @@
 // File: src/HistoryManager.js
 
 const HistoryManager = {
-  // 1. UPDATE FUNGSI SNAPSHOT (Merekam Memori)
+  // Hanya menyimpan objek aksi ringan, bukan seluruh sirkuit!
+  undoStack: [],
+  redoStack: [],
+  maxUndo: 100,
+
+  // =========================================================
+  // 1. MESIN COMMAND PATTERN (PENDEKATAN DELTA)
+  // =========================================================
+  pushCommand(actionType, data, description = '') {
+    if (CircuitStore.isUndoRedoOp) return;
+    
+    // Merekam perintah/aksi yang terjadi
+    this.undoStack.push({ action: actionType, data: data, desc: description });
+    if (this.undoStack.length > this.maxUndo) this.undoStack.shift();
+    
+    this.redoStack = []; // Hapus memori Redo masa depan jika ada aksi baru
+    this.updateUndoRedoButtons();
+    
+    // Auto-save ke localStorage agar tidak hilang jika di-refresh
+    this.autoSaveToLocalStorage();
+    CircuitStore.hasUnsavedChanges = true;
+  },
+
+  undo() {
+    if (!this.undoStack.length) return UIManager.showToast('Tidak ada aksi yang bisa di-undo');
+    const cmd = this.undoStack.pop();
+    
+    CircuitStore.isUndoRedoOp = true;
+    this.executeInverse(cmd); // Jalankan kebalikan aksi
+    CircuitStore.isUndoRedoOp = false;
+    
+    this.redoStack.push(cmd);
+    this.updateUndoRedoButtons();
+    this.autoSaveToLocalStorage();
+    
+    // Render ulang layar
+    if (typeof drawConnections !== 'undefined') drawConnections();
+    if (typeof updateConnectionPointVisuals !== 'undefined') updateConnectionPointVisuals();
+    if (CircuitStore.isSimulationActive && typeof SimulationEngine !== 'undefined') SimulationEngine.run();
+  },
+
+  redo() {
+    if (!this.redoStack.length) return UIManager.showToast('Tidak ada aksi yang bisa di-redo');
+    const cmd = this.redoStack.pop();
+    
+    CircuitStore.isUndoRedoOp = true;
+    this.executeForward(cmd); // Jalankan ulang aksi
+    CircuitStore.isUndoRedoOp = false;
+    
+    this.undoStack.push(cmd);
+    this.updateUndoRedoButtons();
+    this.autoSaveToLocalStorage();
+    
+    // Render ulang layar
+    if (typeof drawConnections !== 'undefined') drawConnections();
+    if (typeof updateConnectionPointVisuals !== 'undefined') updateConnectionPointVisuals();
+    if (CircuitStore.isSimulationActive && typeof SimulationEngine !== 'undefined') SimulationEngine.run();
+  },
+
+  // ---------------------------------------------------------
+  // DISTRIBUTOR LOGIKA AKSI (AKAN KITA ISI DI LANGKAH 2 & 3)
+  // ---------------------------------------------------------
+  executeInverse(cmd) {
+    switch(cmd.action) {
+        case 'CHANGE_PARAM':
+            if (typeof undoRedoParam === 'function') undoRedoParam(cmd.data.compId, cmd.data.oldData);
+            break;
+        case 'PASTE_COMPONENT':
+            // Kebalikan dari Paste adalah Menghapusnya dari kanvas!
+            if (typeof removeDeletedData === 'function') removeDeletedData(cmd.data);
+            break;    
+        case 'SPLICE_WIRE':
+            // Mundur: Hapus simpul dan jahit kembali kabel asli
+            if (typeof undoSplice === 'function') undoSplice(cmd.data);
+            break;    
+        case 'ADD_COMPONENT':
+            if (typeof undoAddComponent === 'function') undoAddComponent(cmd.data);
+            break;
+        case 'MOVE_COMPONENT':
+            if (typeof undoRedoMove === 'function') undoRedoMove(cmd.data, true);
+            break;
+        case 'REMOVE_COMPONENT':
+            // Kebalikan dari Menghapus adalah Memulihkan
+            if (typeof restoreDeletedData === 'function') restoreDeletedData(cmd.data);
+            break;
+        case 'ADD_WIRE':
+            // Kebalikan dari Menambah kabel adalah Menghapus kabel itu
+            if (typeof undoAddWire === 'function') undoAddWire(cmd.data);
+            break;
+        case 'REMOVE_WIRE':
+            // Kebalikan dari Menghapus kabel adalah Memasangnya lagi
+            if (typeof undoRemoveWire === 'function') undoRemoveWire(cmd.data);
+            break;
+    }
+  },
+
+  executeForward(cmd) {
+    switch(cmd.action) {
+        case 'CHANGE_PARAM':
+            if (typeof undoRedoParam === 'function') undoRedoParam(cmd.data.compId, cmd.data.newData);
+            break;
+        case 'PASTE_COMPONENT':
+            // Maju: Munculkan kembali (Restore) komponen paste tersebut
+            if (typeof restoreDeletedData === 'function') restoreDeletedData(cmd.data);
+            break;
+        case 'SPLICE_WIRE':
+            // Maju: Potong kabel dan buat simpul kembali
+            if (typeof redoSplice === 'function') redoSplice(cmd.data);
+            break;        
+        case 'ADD_COMPONENT':
+            if (typeof redoAddComponent === 'function') redoAddComponent(cmd.data);
+            break;
+        case 'MOVE_COMPONENT':
+            if (typeof undoRedoMove === 'function') undoRedoMove(cmd.data, false);
+            break;
+        case 'REMOVE_COMPONENT':
+            // Maju: Eksekusi hapus lagi
+            if (typeof removeDeletedData === 'function') removeDeletedData(cmd.data);
+            break;
+        case 'ADD_WIRE':
+            // Maju: Pasang kabel lagi
+            if (typeof redoAddWire === 'function') redoAddWire(cmd.data);
+            break;
+        case 'REMOVE_WIRE':
+            // Maju: Hapus kabel lagi
+            if (typeof redoRemoveWire === 'function') redoRemoveWire(cmd.data);
+            break;
+    }
+  },
+
+  // =========================================================
+  // 2. FUNGSI LAWAS UNTUK EKSPOR/IMPORT & AUTOSAVE
+  // =========================================================
   snapshotState(desc = '') {
     const clonedComponents = CircuitStore.components.map(c => ({
       id: c.id, type: c.type, inputs: c.inputs, outputs: c.outputs,
@@ -23,13 +155,11 @@ const HistoryManager = {
       posRail: c.posRail != null ? c.posRail : null,
       negRail: c.negRail != null ? c.negRail : null,
       initialState: c.initialState != null ? c.initialState : null,
-      
-      // TAMBAHAN DATA YANG WAJIB DIINGAT
-      isMilli: c.isMilli || false,
-      measActive: c.measActive, activeCh: c.activeCh, xPosition: c.xPosition,
-      tDivIndex: c.tDivIndex, dispMode: c.dispMode, trigMode: c.trigMode,
-      trigSource: c.trigSource, trigLevel: c.trigLevel, trigSlope: c.trigSlope,
-      trigCoupl: c.trigCoupl, cursorActive: c.cursorActive,
+      dcOffset: c.dcOffset != null ? c.dcOffset : null,
+      timeDelay: c.timeDelay != null ? c.timeDelay : null,
+      isMilli: c.isMilli || false, measActive: c.measActive, activeCh: c.activeCh, xPosition: c.xPosition,
+      tDivIndex: c.tDivIndex, dispMode: c.dispMode, trigMode: c.trigMode, trigSource: c.trigSource, 
+      trigLevel: c.trigLevel, trigSlope: c.trigSlope, trigCoupl: c.trigCoupl, cursorActive: c.cursorActive,
       curV1Y: c.curV1Y, curV2Y: c.curV2Y, curT1X: c.curT1X, curT2X: c.curT2X,
       ch1Config: c.ch1 ? { vDivIndex: c.ch1.vDivIndex, yPosition: c.ch1.yPosition, invert: c.ch1.invert, coupl: c.ch1.coupl, enabled: c.ch1.enabled } : null,
       ch2Config: c.ch2 ? { vDivIndex: c.ch2.vDivIndex, yPosition: c.ch2.yPosition, invert: c.ch2.invert, coupl: c.ch2.coupl, enabled: c.ch2.enabled } : null
@@ -46,8 +176,6 @@ const HistoryManager = {
   },
 
   autoSaveToLocalStorage() {
-    // JSON.stringify di sini tetap ada HANYA karena localStorage memang wajib menerima String,
-    // bukan karena kita ingin melakukan Deep Copy.
     try { localStorage.setItem('labCircuitAutoSave', JSON.stringify(this.snapshotState('Auto-save'))); } catch(e) {}
   },
 
@@ -57,8 +185,10 @@ const HistoryManager = {
       if (saved) {
         const state = JSON.parse(saved);
         if (state.components && state.components.length > 0) {
+          CircuitStore.isUndoRedoOp = true;
           this.restoreState({ ...state, description: 'Auto-saved circuit' });
-          CircuitStore.undoStack = []; CircuitStore.redoStack = []; this.updateUndoRedoButtons();
+          CircuitStore.isUndoRedoOp = false;
+          this.undoStack = []; this.redoStack = []; this.updateUndoRedoButtons();
           return true;
         }
       }
@@ -71,7 +201,6 @@ const HistoryManager = {
     const data = this.snapshotState('Export');
     data.version = '18.2'; data.timestamp = new Date().toISOString();
     
-    // Konversi ke format JSON untuk diunduh sebagai File
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
     a.download = `digital-circuit-${new Date().toISOString().slice(0,10)}.json`;
@@ -98,51 +227,21 @@ const HistoryManager = {
   },
 
   loadCircuitData(data) {
-    if (CircuitStore.isSimulationActive) SimulationEngine.stop();
+    if (CircuitStore.isSimulationActive && typeof SimulationEngine !== 'undefined') SimulationEngine.stop();
     CircuitStore.isUndoRedoOp = true;
-    const safeCounter = data.componentIdCounter != null
-      ? data.componentIdCounter
-      : (data.components.length > 0 ? Math.max(...data.components.map(c => c.id)) : 0);
+    const safeCounter = data.componentIdCounter != null ? data.componentIdCounter : (data.components.length > 0 ? Math.max(...data.components.map(c => c.id)) : 0);
     this.restoreState({ components: data.components, connections: data.connections, componentIdCounter: safeCounter, description: 'Load' });
     CircuitStore.isUndoRedoOp = false;
-    CircuitStore.undoStack = []; CircuitStore.redoStack = []; this.updateUndoRedoButtons();
-    this.saveStateToUndoStack('Initial state after import');
+    this.undoStack = []; this.redoStack = []; this.updateUndoRedoButtons();
     UIManager.showToast('📂 File berhasil terupload & dimuat');
-  },
-
-  saveStateToUndoStack(desc = '') {
-    if (CircuitStore.isUndoRedoOp) return;
-    CircuitStore.undoStack.push(this.snapshotState(desc));
-    if (CircuitStore.undoStack.length > CircuitStore.maxUndo) CircuitStore.undoStack.shift();
-    CircuitStore.redoStack = [];
-    this.updateUndoRedoButtons();
-    this.autoSaveToLocalStorage();
-    CircuitStore.hasUnsavedChanges = true;
-  },
-
-  undo() {
-    if (!CircuitStore.undoStack.length) return UIManager.showToast('Tidak ada aksi yang bisa di-undo');
-    CircuitStore.redoStack.push(this.snapshotState('Current'));
-    const prev = CircuitStore.undoStack.pop();
-    CircuitStore.isUndoRedoOp = true; this.restoreState(prev); CircuitStore.isUndoRedoOp = false;
-    this.updateUndoRedoButtons(); this.autoSaveToLocalStorage();
-  },
-
-  redo() {
-    if (!CircuitStore.redoStack.length) return UIManager.showToast('Tidak ada aksi yang bisa di-redo');
-    CircuitStore.undoStack.push(this.snapshotState('Current'));
-    const next = CircuitStore.redoStack.pop();
-    CircuitStore.isUndoRedoOp = true; this.restoreState(next); CircuitStore.isUndoRedoOp = false;
-    this.updateUndoRedoButtons(); this.autoSaveToLocalStorage();
   },
 
   updateUndoRedoButtons() {
     const u = document.getElementById('btnUndo'); const r = document.getElementById('btnRedo');
-    if (u) u.disabled = !CircuitStore.undoStack.length;
-    if (r) r.disabled = !CircuitStore.redoStack.length;
+    if (u) u.disabled = !this.undoStack.length;
+    if (r) r.disabled = !this.redoStack.length;
   },
 
-// 2. UPDATE FUNGSI RESTORE (Memulihkan Memori)
   restoreState(state) {
     const canvas = document.getElementById('canvas');
     Array.from(canvas.children).forEach(child => {
@@ -152,47 +251,26 @@ const HistoryManager = {
     const wireSvg = document.getElementById('wire-svg');
     if (wireSvg) wireSvg.querySelectorAll('path').forEach(p => p.remove());
 
-    CircuitStore.components = []; CircuitStore.connections = []; CircuitStore.clearSelection(); CircuitStore.connectionStart = null;
+    CircuitStore.components = []; CircuitStore.connections = []; 
+    if (typeof clearSelection !== 'undefined') clearSelection(); 
+    CircuitStore.connectionStart = null;
     CircuitStore.componentIdCounter = state.componentIdCounter;
 
     state.components.forEach(cd => {
-      const compData = {
-        id: cd.id, type: cd.type, inputs: cd.inputs, outputs: cd.outputs,
-        x: cd.x, y: cd.y, state: cd.state || '0', customValue: cd.customValue, 
-        rotation: cd.rotation || 0, locked: cd.locked || false,
-        freqValue: cd.freqValue != null ? cd.freqValue : (cd.type === 'vsine' ? 1 : null),
-        r1Value: cd.r1Value != null ? cd.r1Value : (cd.type === 'voltage_divider' ? 10000 : null),
-        r2Value: cd.r2Value != null ? cd.r2Value : (cd.type === 'voltage_divider' ? 10000 : null),
-        forwardV: cd.forwardV != null ? cd.forwardV : (cd.type === 'led' ? 2.2 : null),
-        fullDriveI: cd.fullDriveI != null ? cd.fullDriveI : (cd.type === 'led' ? 10 : null),
-        breakdownV: cd.breakdownV != null ? cd.breakdownV : (cd.type === 'led' ? 4.0 : null),
-        ratedV: cd.ratedV != null ? cd.ratedV : (cd.type === 'motor_dc' ? 12 : null),
-        maxRpm: cd.maxRpm != null ? cd.maxRpm : (cd.type === 'motor_dc' ? 3000 : null),
-        coilR: cd.coilR != null ? cd.coilR : (cd.type === 'motor_dc' ? 15 : null),
-        color: cd.color != null ? cd.color : (cd.type === 'led' ? 'red' : null),
-        r25: cd.r25 != null ? cd.r25 : (cd.type === 'thermistor_ntc' ? 10000 : (cd.type === 'thermistor_ptc' ? 100 : null)),
-        beta: cd.beta != null ? cd.beta : (cd.type === 'thermistor_ntc' ? 3950 : null),
-        alpha: cd.alpha != null ? cd.alpha : (cd.type === 'thermistor_ptc' ? 0.05 : null),
-        posRail: cd.posRail != null ? cd.posRail : ((cd.type === 'opamp' || cd.type === 'opamp_5pin') ? 15 : null),
-        negRail: cd.negRail != null ? cd.negRail : ((cd.type === 'opamp' || cd.type === 'opamp_5pin') ? -15 : null),
-        initialState: cd.initialState != null ? cd.initialState : (cd.type === 'clock_pulse' ? '0' : null),
-        
-        // PEMULIHAN DATA YANG WAJIB DIINGAT
-        isMilli: cd.isMilli || false,
-        measActive: cd.measActive, activeCh: cd.activeCh, xPosition: cd.xPosition,
-        tDivIndex: cd.tDivIndex, dispMode: cd.dispMode, trigMode: cd.trigMode,
-        trigSource: cd.trigSource, trigLevel: cd.trigLevel, trigSlope: cd.trigSlope,
-        trigCoupl: cd.trigCoupl, cursorActive: cd.cursorActive,
-        curV1Y: cd.curV1Y, curV2Y: cd.curV2Y, curT1X: cd.curT1X, curT2X: cd.curT2X,
-        ch1: cd.ch1Config ? { ...cd.ch1Config, dcOffset: 0 } : undefined,
-        ch2: cd.ch2Config ? { ...cd.ch2Config, dcOffset: 0 } : undefined,
-
-        simV: 0, simI: 0
-      };
-      
-      const div = buildComponentElement(compData); 
-      canvas.appendChild(div);
-      CircuitStore.addComponent({ ...compData, element: div });
+      const compData = { ...cd, simV: 0, simI: 0 };
+      if (typeof buildComponentElement !== 'undefined') {
+          const div = buildComponentElement(compData); 
+          canvas.appendChild(div);
+          
+          // Instansiasi OOP (Karena kita sudah pakai Registry)
+          let finalComp = compData;
+          if (typeof ComponentRegistry !== 'undefined') {
+              const ComponentClass = ComponentRegistry[compData.type] || BaseComponent;
+              finalComp = new ComponentClass(compData);
+          }
+          finalComp.element = div;
+          CircuitStore.addComponent(finalComp);
+      }
     });
     
     state.connections.forEach(conn => {
@@ -205,8 +283,13 @@ const HistoryManager = {
     });
 
     requestAnimationFrame(() => {
-      drawConnections(); updateConnectionPointVisuals();
-      if (CircuitStore.isSimulationActive) SimulationEngine.run();
+      if (typeof drawConnections !== 'undefined') drawConnections(); 
+      if (typeof updateConnectionPointVisuals !== 'undefined') updateConnectionPointVisuals();
+      if (CircuitStore.isSimulationActive && typeof SimulationEngine !== 'undefined') SimulationEngine.run();
     });
+  },
+  // Jembatan (Bridge) agar sisa kode lawas di main.js tidak membuat aplikasi Crash
+  saveStateToUndoStack(desc = '') {
+      console.log('Perintah lawas diabaikan (Aman): ' + desc);
   }
 };

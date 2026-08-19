@@ -52,8 +52,9 @@ window.updateSimControlsUI = (state) => {
 window.startSim = () => {
     if (CircuitStore.isSimulationActive) return; 
     CircuitStore.isSimulationActive = true; 
+    CircuitStore.isPaused = false;
     
-    // 🟢 RAHASIA PLAY: Kita nyalakan mesin secara manual tanpa toggle!
+    // PLAY: nyalakan mesin secara manual tanpa toggle!
     if (typeof SimulationEngine !== 'undefined') {
         SimulationEngine.isRunning = true; 
         SimulationEngine.run(); 
@@ -67,8 +68,9 @@ window.startSim = () => {
 window.pauseSim = () => {
     if (!CircuitStore.isSimulationActive) return; 
     CircuitStore.isSimulationActive = false; 
+    CircuitStore.isPaused = true;
     
-    // 🟢 RAHASIA PAUSE: Kita matikan perputaran mesin, TAPI jangan panggil .stop()
+    // 🟢 PAUSE: matikan perputaran mesin, TAPI jangan panggil .stop()
     // Agar voltase yang ada di dalam kabel tetap membeku (tidak jadi 0)!
     if (typeof SimulationEngine !== 'undefined') {
         SimulationEngine.isRunning = false; 
@@ -81,6 +83,7 @@ window.pauseSim = () => {
 // 4. Logika Tombol Matikan (Stop)
 window.stopSim = () => {
     CircuitStore.isSimulationActive = false; 
+    CircuitStore.isPaused = true;
     
     if (typeof SimulationEngine !== 'undefined') {
         SimulationEngine.isRunning = false;
@@ -110,8 +113,10 @@ window.stopSim = () => {
             if (c.type === 'oscilloscope') {
                 if (Array.isArray(c.history1)) c.history1.fill(0);
                 if (Array.isArray(c.history2)) c.history2.fill(0);
+                if (Array.isArray(c.dispBuf1)) c.dispBuf1.fill(0);
+                if (Array.isArray(c.dispBuf2)) c.dispBuf2.fill(0);                
+                c.trigState = 'WAIT';
             }
-
             const cd = document.getElementById(`content-${c.id}`);
             if (cd && typeof ComponentDefs !== 'undefined' && typeof ComponentDefs.updateDOMState === 'function') {
                 ComponentDefs.updateDOMState(c.type, c, cd, c.id);
@@ -153,106 +158,66 @@ window.togglePushButtonLock = function(id, locked) {
     const comp = CircuitStore.components.find(c => c.id === id);
     if (!comp || (comp.type !== 'push_button' && comp.type !== 'push_button_nc')) return;
     
+    const oldData = JSON.parse(JSON.stringify({ ...comp, element: undefined }));
+
     comp.locked = locked;
-    if (locked) {
-        comp.state = '1'; // Terkunci dalam posisi tekan
-    }
-    // Update visual
+    if (locked) comp.state = '1'; 
+
     if (typeof ComponentDefs !== 'undefined') {
         const contentDiv = document.getElementById(`content-${id}`);
-        if (contentDiv) {
-            ComponentDefs.updateDOMState(comp.type, comp, contentDiv, id);
-        }
+        if (contentDiv) ComponentDefs.updateDOMState(comp.type, comp, contentDiv, id);
     }
-    if (typeof HistoryManager !== 'undefined') {
-        HistoryManager.saveStateToUndoStack('Kunci Push Button');
+
+    const newData = JSON.parse(JSON.stringify({ ...comp, element: undefined }));
+    if (typeof HistoryManager !== 'undefined' && !CircuitStore.isUndoRedoOp) {
+        HistoryManager.pushCommand('CHANGE_PARAM', { compId: id, oldData, newData }, `Kunci Push Button`);
     }
 };
 
 // 🟢 FIX: Deklarasi eksplisit di luar fungsi (Module Scope) agar tidak mencemari global 'window'
+// 🟢 Variabel global untuk menahan memori awal sebelum sensor bergeser
+let activeSensorOldData = null; 
 let sensorSaveTimeout = null; 
 
 window.adjustSensorValue = function(id, delta) {
     const comp = CircuitStore.components.find(c => c.id === id);
     if (!comp) return;
+
+    // Amankan data lama SAAT KLIK PERTAMA KALI
+    if (!activeSensorOldData) activeSensorOldData = JSON.parse(JSON.stringify({ ...comp, element: undefined }));
+
     let val = parseInt(comp.state || '50');
     val += delta;
-    
-    if (comp.type.startsWith('thermistor')) {
-        val = Math.max(-40, Math.min(150, val)); // Termistor bisa dari -40 sampai 150
-    } else {
-        val = Math.max(0, Math.min(100, val));   // LDR & Potensiometer 0 sampai 100
-    }
-    
+    val = comp.type.startsWith('thermistor') ? Math.max(-40, Math.min(150, val)) : Math.max(0, Math.min(100, val));
     comp.state = val.toString();
     
     const contentDiv = document.getElementById(`content-${id}`);
     if (contentDiv && typeof ComponentDefs !== 'undefined') {
         ComponentDefs.updateDOMState(comp.type, comp, contentDiv, id);
     }
-    
     if (CircuitStore.isSimulationActive) SimulationEngine.run();
 
-    // --- TAMBAHAN KODE UNDO/REDO DI SINI ---
     clearTimeout(sensorSaveTimeout);
     sensorSaveTimeout = setTimeout(() => {
-        if (typeof HistoryManager !== 'undefined') {
-            HistoryManager.saveStateToUndoStack(`Mengubah nilai sensor`);
+        const newData = JSON.parse(JSON.stringify({ ...comp, element: undefined }));
+        if (typeof HistoryManager !== 'undefined' && !CircuitStore.isUndoRedoOp) {
+            HistoryManager.pushCommand('CHANGE_PARAM', { compId: id, oldData: activeSensorOldData, newData }, `Atur sensor`);
         }
+        activeSensorOldData = null; // Reset untuk geseran berikutnya
     }, 500);
 };
 
-window.adjustVsineAmp = (id, delta) => {
-  const comp = CircuitStore.components.find(c => c.id === id);
-  if (!comp) return;
-  let val = comp.customValue || 12;
-  val += delta; // delta dalam Volt, misal ±1
-  if (val > 24) val = 24;   // batas atas: 24Vp
-  if (val < 1) val = 1;     // batas bawah: 1Vp
-  comp.customValue = val;
-
-  const cd = document.getElementById(`content-${id}`);
-  if (cd) ComponentDefs.updateDOMState(comp.type, comp, cd, id);
-
-  clearTimeout(sensorSaveTimeout);
-  sensorSaveTimeout = setTimeout(() => {
-    HistoryManager.saveStateToUndoStack(`Mengatur amplitudo V-Sine`);
-  }, 500);
-};
-
-window.adjustVsineFreq = (id, delta) => {
-  const comp = CircuitStore.components.find(c => c.id === id);
-  if (!comp) return;
-  let val = comp.freqValue || 1;
-  val += delta; // delta dalam Hz, misal ±0.5
-  val = Math.round(val * 10) / 10; // hindari hasil aneh seperti 1.4999999
-  if (val > 5) val = 5;     // batas atas: 5Hz
-  if (val < 0.1) val = 0.1; // batas bawah: 0.1Hz
-  comp.freqValue = val;
-
-  const cd = document.getElementById(`content-${id}`);
-  if (cd) ComponentDefs.updateDOMState(comp.type, comp, cd, id);
-
-  clearTimeout(sensorSaveTimeout);
-  sensorSaveTimeout = setTimeout(() => {
-    HistoryManager.saveStateToUndoStack(`Mengatur frekuensi V-Sine`);
-  }, 500);
-};
-
-// window.adjustFlasherSpeed 
 window.adjustFlasherSpeed = function(id, delta) {
     const comp = typeof CircuitStore !== 'undefined' ? CircuitStore.components.find(c => c.id === id) : null;
     if (comp) {
+        if (!activeSensorOldData) activeSensorOldData = JSON.parse(JSON.stringify({ ...comp, element: undefined }));
+
         if (comp.customValue === undefined) comp.customValue = 500;
-        
-        // Buat langkah (step) lebih halus jika periode sudah di bawah 100ms
         let step = delta;
-        if (comp.customValue <= 100 && delta < 0) step = -10; // Turun per 10ms
-        if (comp.customValue < 100 && delta > 0) step = 10;   // Naik per 10ms
+        if (comp.customValue <= 100 && delta < 0) step = -10; 
+        if (comp.customValue < 100 && delta > 0) step = 10;   
         
         comp.customValue += step;
-        
-        // BATAS BAWAH BARU: 10ms (Setara dengan 50 Hz!)
         if (comp.customValue < 10) comp.customValue = 10;
         if (comp.customValue > 5000) comp.customValue = 5000;
 
@@ -261,12 +226,13 @@ window.adjustFlasherSpeed = function(id, delta) {
             ComponentDefs.updateDOMState('flasher', comp, contentDiv, id);
         }
 
-        // --- TAMBAHAN KODE UNDO/REDO DI SINI ---
         clearTimeout(sensorSaveTimeout);
         sensorSaveTimeout = setTimeout(() => {
-            if (typeof HistoryManager !== 'undefined') {
-                HistoryManager.saveStateToUndoStack(`Mengatur kecepatan Flasher`);
+            const newData = JSON.parse(JSON.stringify({ ...comp, element: undefined }));
+            if (typeof HistoryManager !== 'undefined' && !CircuitStore.isUndoRedoOp) {
+                HistoryManager.pushCommand('CHANGE_PARAM', { compId: id, oldData: activeSensorOldData, newData }, `Atur kecepatan Flasher`);
             }
+            activeSensorOldData = null; 
         }, 500);
     }
 };
@@ -339,11 +305,6 @@ function setComponentDimensions(div, type) {
 
 // ─── Create Component ──────────────────────────────────────────────────────────
 function createComponent(type, x, y, inputs, outputs) {
-  // 🟢 SIMPAN RIWAYAT SEBELUM KOMPONEN DILAHIRKAN!
-  if (typeof HistoryManager !== 'undefined') {
-      HistoryManager.saveStateToUndoStack(`Menambahkan ${type}`);
-  }
-
   const GRID_SIZE = 10;
   const id = ++CircuitStore.componentIdCounter;
   
@@ -362,6 +323,8 @@ function createComponent(type, x, y, inputs, outputs) {
     state: defaultState,
     customValue: (type === 'resistor') ? 330 : (type === 'fuse' ? 10 : (type === 'flasher' ? 500 : (type === 'vsine' ? 12 : (type === 'battery' || type === 'battery_multi' || type === 'power_terminal' ? 12 : (type === 'battery_1cell' ? 1.5 : (type === 'capacitor' ? 10 : null)))))),
     freqValue: (type === 'vsine') ? 1 : null,
+    dcOffset: (type === 'vsine') ? 0 : null,
+    timeDelay: (type === 'vsine') ? 0 : null,
     inputStates: new Array(inputs).fill(0), outputState: 0,
     simV: 0, simI: 0
   };
@@ -369,6 +332,12 @@ function createComponent(type, x, y, inputs, outputs) {
   const div = buildComponentElement(compData);
   document.getElementById('canvas').appendChild(div);
   CircuitStore.addComponent({ ...compData, element: div });
+  // REKAM AKSI ADD_COMPONENT KE MEMORI UNDO/REDO
+  if (typeof HistoryManager !== 'undefined' && !CircuitStore.isUndoRedoOp) {
+    // Buang elemen DOM dari data agar aman diubah ke JSON
+    const memData = JSON.parse(JSON.stringify({ ...compData, element: undefined }));
+    HistoryManager.pushCommand('ADD_COMPONENT', { compId: id, compData: memData }, `Menambah ${type}`);
+}
   selectComponent(id);
   if (CircuitStore.isSimulationActive) SimulationEngine.run();
 }
@@ -650,7 +619,7 @@ function createConnectionPoint(compId, pinType, index, total, compType) {
       y = 30; 
       if (index === 1) pt.dataset.polarity = 'neg'; 
       break;
-    case 'vsine': x = index === 0 ? 0 : 160; y = 35; break;
+    case 'vsine': x = index === 0 ? 0 : 130; y = 35; break;
     case 'switch_spst':   x = pinType === 'input' ? 0 : 80; y = 20; break;
     case 'switch_spdt':
       if (pinType === 'input') {
@@ -921,10 +890,16 @@ function updateConnectionPointVisuals() {
 }
 
 function deleteConnection(srcId, srcPin, tgtId, tgtPin) {
-  HistoryManager.saveStateToUndoStack('Menghapus kabel'); 
+  // Amankan data kabel sebelum dilenyapkan
+  const removedConn = CircuitStore.connections.find(c => c.source.compId === srcId && c.source.pinIndex === srcPin && c.target.compId === tgtId && c.target.pinIndex === tgtPin);
+  
   const before = CircuitStore.connections.length;
   CircuitStore.removeConnection(srcId, srcPin, tgtId, tgtPin);
   if (CircuitStore.connections.length < before) {
+    // REKAM PERINTAH HAPUS KABEL
+    if (typeof HistoryManager !== 'undefined' && !CircuitStore.isUndoRedoOp && removedConn) {
+        HistoryManager.pushCommand('REMOVE_WIRE', JSON.parse(JSON.stringify(removedConn)), 'Menghapus kabel');
+    }
     drawConnections(); updateConnectionPointVisuals();
     if (CircuitStore.isSimulationActive) SimulationEngine.run();
   }
@@ -985,8 +960,7 @@ function handleConnectionClick(compId, type, index) {
       return UIManager.showToast('Koneksi ini sudah ada');
   }
 
-  HistoryManager.saveStateToUndoStack('Menambahkan kabel');
-
+  let replacedConn = null;
   if (tgtIsInput) {
     let allowMultipleInputs = false;
     const targetComp = CircuitStore.components.find(c => c.id === tgtId);
@@ -994,6 +968,8 @@ function handleConnectionClick(compId, type, index) {
     if (targetComp && allowedTypes.includes(targetComp.type)) allowMultipleInputs = true;
 
     if (!allowMultipleInputs) {
+        // Amankan info kabel lama yang akan tergusur
+        replacedConn = CircuitStore.connections.find(c => c.target.compId === tgtId && c.target.pinIndex === tgtPin);
         const replaced = CircuitStore.removeConnectionsTargeting(tgtId, tgtPin);
         if (replaced) UIManager.showToast('Kabel lama pada pin ini diganti');
     }
@@ -1019,6 +995,13 @@ function handleConnectionClick(compId, type, index) {
 
   // Masukkan Array finalWaypoints kita ke dalam pembuatan koneksi
   createConnection(srcId, srcPin, tgtId, tgtPin, finalWaypoints, srcType, tgtType);
+  const newConn = CircuitStore.connections[CircuitStore.connections.length - 1];
+  if (typeof HistoryManager !== 'undefined' && !CircuitStore.isUndoRedoOp) {
+      HistoryManager.pushCommand('ADD_WIRE', { 
+          added: JSON.parse(JSON.stringify(newConn)), 
+          removed: replacedConn ? JSON.parse(JSON.stringify(replacedConn)) : null 
+      }, 'Menyambung kabel');
+  }
   
   // BERSIHKAN LAYAR DARI KABEL BAYANGAN
   CircuitStore.tempWaypoints = []; 
@@ -1034,16 +1017,13 @@ window.splitWireToNode = function(wireId, x, y) {
     const conn = CircuitStore.connections.find(c => c.id === wireId);
     if (!conn) return;
 
-    if (typeof HistoryManager !== 'undefined') {
-        HistoryManager.saveStateToUndoStack('Membuat Percabangan Node');
-    }
+    // 🟢 1. Amankan data kabel lama sebelum dipotong
+    const oldConnCopy = JSON.parse(JSON.stringify(conn));
 
-    // 1. Hitung titik kordinat yang dipaskan ke Grid (Snap to Grid)
     const GRID_SIZE = 10;
     const snapX = Math.round(x / GRID_SIZE) * GRID_SIZE;
     const snapY = Math.round(y / GRID_SIZE) * GRID_SIZE;
 
-    // 2. Buat Komponen "Node Cabang" (Junction) secara gaib di koordinat tersebut
     const jId = ++CircuitStore.componentIdCounter;
     const compData = {
         id: jId, type: 'junction', inputs: 1, outputs: 3,
@@ -1055,30 +1035,34 @@ window.splitWireToNode = function(wireId, x, y) {
     document.getElementById('canvas').appendChild(div);
     CircuitStore.addComponent({ ...compData, element: div });
 
-    // 3. Simpan data ujung sumber dan target dari kabel lama
+    // 🟢 2. Amankan cetakan Junction baru
+    const addedCompCopy = JSON.parse(JSON.stringify({ ...compData, element: undefined }));
+
     const src = { ...conn.source };
     const tgt = { ...conn.target };
 
-    // 4. Hapus kabel lama yang utuh
     CircuitStore.removeConnection(src.compId, src.pinIndex, tgt.compId, tgt.pinIndex);
 
-    // 5. Jahit kembali: Sambungkan sumber asli ke input Node Cabang
     createConnection(src.compId, src.pinIndex, jId, 0, [], src.type, 'input');
-
-    // 6. Jahit kembali: Sambungkan Output 0 Node Cabang ke target asli
+    const newConn1 = JSON.parse(JSON.stringify(CircuitStore.connections[CircuitStore.connections.length - 1]));
+    
     createConnection(jId, 0, tgt.compId, tgt.pinIndex, [], 'output', tgt.type);
+    const newConn2 = JSON.parse(JSON.stringify(CircuitStore.connections[CircuitStore.connections.length - 1]));
 
-    // Sekarang, pengguna memiliki Pin Output 1 dan Output 2 yang BEBAS di Node tersebut
-    // untuk menarik cabang kabel ke komponen lain!
+    // 🟢 3. Rekam ke Command Pattern
+    if (typeof HistoryManager !== 'undefined' && !CircuitStore.isUndoRedoOp) {
+        HistoryManager.pushCommand('SPLICE_WIRE', {
+            removedConnections: [oldConnCopy],
+            addedComponents: [addedCompCopy],
+            addedConnections: [newConn1, newConn2]
+        }, 'Buat Node Cabang');
+    }
 
-    // Perbarui layar
     drawConnections();
     updateConnectionPointVisuals();
     if (CircuitStore.isSimulationActive) SimulationEngine.run();
     
-    if (typeof UIManager !== 'undefined') {
-        UIManager.showToast('🔗 Titik percabangan (Node) berhasil dibuat!');
-    }
+    if (typeof UIManager !== 'undefined') UIManager.showToast('🔗 Titik percabangan (Node) berhasil dibuat!');
 };
 
 // ─── Draw connections (Advanced Smart Routing) ────────────────────────────────
@@ -1206,85 +1190,93 @@ function drawConnections() {
 
             if (CircuitStore.connectionStart) {
                 // FITUR SMART SPLICING (Menyambung Kabel ke Kabel)
-                const canvas = document.getElementById('canvas');
-                const cr = canvas.getBoundingClientRect();
-                let clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                let clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                // Magnet ke grid terdekat (Kelipatan 10)
-                let mx = Math.round(((clientX - cr.left) / UIManager.currentZoom) / 10) * 10;
-                let my = Math.round(((clientY - cr.top) / UIManager.currentZoom) / 10) * 10;
+            const canvas = document.getElementById('canvas');
+            const cr = canvas.getBoundingClientRect();
+            let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            let clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            let mx = Math.round(((clientX - cr.left) / UIManager.currentZoom) / 10) * 10;
+            let my = Math.round(((clientY - cr.top) / UIManager.currentZoom) / 10) * 10;
 
-                HistoryManager.saveStateToUndoStack('Menyambung kabel ke kabel');
+            // 🟢 1. Amankan data kabel lawas
+            const oldConnObj = CircuitStore.connections.find(c => c.id === path.getAttribute('data-wire-id'));
+            const oldConnCopy = oldConnObj ? JSON.parse(JSON.stringify(oldConnObj)) : null;
 
-                // 1. Ekstrak rute belokan (waypoints) dari kabel lama agar tidak berantakan
-                let wpA = [], wpB = [];
-                const oldConn = CircuitStore.connections.find(c => c.id === path.getAttribute('data-wire-id'));
-                if (oldConn && oldConn.waypoints && oldConn.waypoints.length > 0) {
-                    let sp = getPinPosition(sId, sType, sIdx) || {x: mx, y: my};
-                    let tp = getPinPosition(tId, tType, tIdx) || {x: mx, y: my};
-                    let pts = [sp, ...oldConn.waypoints, tp];
-                    let splitIdx = 0;
-                    for (let i = 0; i < pts.length - 1; i++) {
-                        let p1 = pts[i], p2 = pts[i+1];
-                        let minX = Math.min(p1.x, p2.x), maxX = Math.max(p1.x, p2.x);
-                        let minY = Math.min(p1.y, p2.y), maxY = Math.max(p1.y, p2.y);
-                        // Toleransi 15px agar deteksi klik kabel akurat
-                        if (mx >= minX - 15 && mx <= maxX + 15 && my >= minY - 15 && my <= maxY + 15) {
-                            splitIdx = i; break;
-                        }
-                    }
-                    wpA = oldConn.waypoints.slice(0, splitIdx);
-                    wpB = oldConn.waypoints.slice(splitIdx);
-                }
-
-                // 2. Potong/Hapus kabel lama
-                CircuitStore.removeConnection(sId, sIdx, tId, tIdx);
-
-                // 3. Buat Komponen Titik Solder (wire_node) persis di posisi klik
-                const jId = ++CircuitStore.componentIdCounter;
-                const compData = {
-                    id: jId, type: 'wire_node', inputs: 4, outputs: 0, 
-                    x: mx - 10, y: my - 10, // Dimensi 20x20, geser -10 agar tepat di tengah kursor
-                    state: '0', inputStates: [0,0,0,0], outputState: 0, simV: 0, simI: 0
-                };
-                const div = buildComponentElement(compData);
-                document.getElementById('canvas').appendChild(div);
-                CircuitStore.addComponent({ ...compData, element: div });
-
-                // 4. Sambungkan pecahan kabel lama ke Titik Solder
-                createConnection(sId, sIdx, jId, 0, wpA, sType, 'input');
-                createConnection(jId, 1, tId, tIdx, wpB, 'input', tType);
-
-                // 5. Sambungkan kabel baru yang sedang ditarik ke Titik Solder
-                const startNode = CircuitStore.connectionStart;
-                let finalWp = CircuitStore.tempWaypoints ? [...CircuitStore.tempWaypoints] : [];
-                
-                // Berikan sudut siku otomatis jika rutenya tidak rata
-                if (finalWp.length > 0) {
-                    let lastWp = finalWp[finalWp.length - 1];
-                    if (lastWp.x !== mx && lastWp.y !== my) {
-                        if (Math.abs(mx - lastWp.x) > Math.abs(my - lastWp.y)) finalWp.push({ x: mx, y: lastWp.y });
-                        else finalWp.push({ x: lastWp.x, y: my });
+            let wpA = [], wpB = [];
+            if (oldConnObj && oldConnObj.waypoints && oldConnObj.waypoints.length > 0) {
+                let sp = getPinPosition(sId, sType, sIdx) || {x: mx, y: my};
+                let tp = getPinPosition(tId, tType, tIdx) || {x: mx, y: my};
+                let pts = [sp, ...oldConnObj.waypoints, tp];
+                let splitIdx = 0;
+                for (let i = 0; i < pts.length - 1; i++) {
+                    let p1 = pts[i], p2 = pts[i+1];
+                    let minX = Math.min(p1.x, p2.x), maxX = Math.max(p1.x, p2.x);
+                    let minY = Math.min(p1.y, p2.y), maxY = Math.max(p1.y, p2.y);
+                    if (mx >= minX - 15 && mx <= maxX + 15 && my >= minY - 15 && my <= maxY + 15) {
+                        splitIdx = i; break;
                     }
                 }
-                
-                let cSrcId, cSrcPin, cSrcType, cTgtId, cTgtPin, cTgtType;
-                if (startNode.type === 'output') {
-                    cSrcId = startNode.compId; cSrcPin = startNode.index; cSrcType = 'output';
-                    cTgtId = jId; cTgtPin = 2; cTgtType = 'input';
-                } else {
-                    cSrcId = jId; cSrcPin = 2; cSrcType = 'input';
-                    cTgtId = startNode.compId; cTgtPin = startNode.index; cTgtType = 'input';
-                    finalWp.reverse();
-                }
-                createConnection(cSrcId, cSrcPin, cTgtId, cTgtPin, finalWp, cSrcType, cTgtType);
+                wpA = oldConnObj.waypoints.slice(0, splitIdx);
+                wpB = oldConnObj.waypoints.slice(splitIdx);
+            }
 
-                // 6. Bersihkan UI (Kabel Bayangan dan Kursor)
-                CircuitStore.connectionStart = null; CircuitStore.tempWaypoints = [];
-                let tw = document.getElementById('temp-wire-path'); if(tw) tw.remove();
-                document.querySelectorAll('.connection-point').forEach(p => p.classList.remove('pending'));
-                
-                UIManager.showToast('🔗 Kabel berhasil ditumpuk (Spliced)!');
+            CircuitStore.removeConnection(sId, sIdx, tId, tIdx);
+
+            const jId = ++CircuitStore.componentIdCounter;
+            const compData = {
+                id: jId, type: 'wire_node', inputs: 4, outputs: 0, 
+                x: mx - 10, y: my - 10, 
+                state: '0', inputStates: [0,0,0,0], outputState: 0, simV: 0, simI: 0
+            };
+            const div = buildComponentElement(compData);
+            document.getElementById('canvas').appendChild(div);
+            CircuitStore.addComponent({ ...compData, element: div });
+            
+            // 🟢 2. Amankan cetakan Wire Node baru
+            const addedCompCopy = JSON.parse(JSON.stringify({ ...compData, element: undefined }));
+
+            createConnection(sId, sIdx, jId, 0, wpA, sType, 'input');
+            const newConn1 = JSON.parse(JSON.stringify(CircuitStore.connections[CircuitStore.connections.length - 1]));
+            
+            createConnection(jId, 1, tId, tIdx, wpB, 'input', tType);
+            const newConn2 = JSON.parse(JSON.stringify(CircuitStore.connections[CircuitStore.connections.length - 1]));
+
+            const startNode = CircuitStore.connectionStart;
+            let finalWp = CircuitStore.tempWaypoints ? [...CircuitStore.tempWaypoints] : [];
+            
+            if (finalWp.length > 0) {
+                let lastWp = finalWp[finalWp.length - 1];
+                if (lastWp.x !== mx && lastWp.y !== my) {
+                    if (Math.abs(mx - lastWp.x) > Math.abs(my - lastWp.y)) finalWp.push({ x: mx, y: lastWp.y });
+                    else finalWp.push({ x: lastWp.x, y: my });
+                }
+            }
+            
+            let cSrcId, cSrcPin, cSrcType, cTgtId, cTgtPin, cTgtType;
+            if (startNode.type === 'output') {
+                cSrcId = startNode.compId; cSrcPin = startNode.index; cSrcType = 'output';
+                cTgtId = jId; cTgtPin = 2; cTgtType = 'input';
+            } else {
+                cSrcId = jId; cSrcPin = 2; cSrcType = 'input';
+                cTgtId = startNode.compId; cTgtPin = startNode.index; cTgtType = 'input';
+                finalWp.reverse();
+            }
+            createConnection(cSrcId, cSrcPin, cTgtId, cTgtPin, finalWp, cSrcType, cTgtType);
+            const newConn3 = JSON.parse(JSON.stringify(CircuitStore.connections[CircuitStore.connections.length - 1]));
+
+            // 🟢 3. Rekam ke Command Pattern
+            if (typeof HistoryManager !== 'undefined' && !CircuitStore.isUndoRedoOp && oldConnCopy) {
+                HistoryManager.pushCommand('SPLICE_WIRE', {
+                    removedConnections: [oldConnCopy],
+                    addedComponents: [addedCompCopy],
+                    addedConnections: [newConn1, newConn2, newConn3]
+                }, 'Sambung kabel ke kabel');
+            }
+
+            CircuitStore.connectionStart = null; CircuitStore.tempWaypoints = [];
+            let tw = document.getElementById('temp-wire-path'); if(tw) tw.remove();
+            document.querySelectorAll('.connection-point').forEach(p => p.classList.remove('pending'));
+            
+            UIManager.showToast('🔗 Kabel berhasil ditumpuk (Spliced)!');
             } else {
                 // JIKA HANYA MENGKLIK BIASA -> Mode Hapus Biasa
                 UIManager.showConfirmToast('Hapus kabel ini?', () => { deleteConnection(sId, sIdx, tId, tIdx); }); 
@@ -1403,9 +1395,6 @@ function startDragComponent(e, compId) {
     // 🟢 2. SIMPAN RIWAYAT TEPAT SEBELUM KOORDINAT DIUBAH
     if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
         if (!hasSavedState) {
-            if (typeof HistoryManager !== 'undefined') {
-                HistoryManager.saveStateToUndoStack(`Memindahkan ${dragGroup.length} komponen`);
-            }
             hasSavedState = true;
         }
         moved = true;
@@ -1457,11 +1446,39 @@ function startDragComponent(e, compId) {
   function onUp() {
     document.removeEventListener('mousemove', onMove);
     document.removeEventListener('mouseup', onUp);
+    
+    // Sama juga untuk onEnd() di startTouchDragComponent:
+    // document.removeEventListener('touchmove', onMove);
+    // document.removeEventListener('touchend', onEnd);
+    
     if (moved) {
+      let moveData = { components: [], connections: [] };
+
+      // Catat pergeseran komponen
       dragGroup.forEach(item => {
         const cd = CircuitStore.components.find(c => c.id === item.id);
-        if (cd) { cd.x = parseFloat(item.el.style.left) || 0; cd.y = parseFloat(item.el.style.top) || 0; }
+        if (cd) { 
+            cd.x = parseFloat(item.el.style.left) || 0; 
+            cd.y = parseFloat(item.el.style.top) || 0; 
+            moveData.components.push({
+                id: item.id, origX: item.origL, origY: item.origT, newX: cd.x, newY: cd.y
+            });
+        }
       });
+
+      // Catat pergeseran kabel yang ikut tertarik
+      affectedConnections.forEach(ac => {
+          moveData.connections.push({
+              id: ac.conn.id,
+              origWaypoints: JSON.parse(JSON.stringify(ac.origWaypoints || [])),
+              newWaypoints: JSON.parse(JSON.stringify(ac.conn.waypoints || []))
+          });
+      });
+
+      // 🟢 REKAM AKSI MOVE_COMPONENT KE MEMORI
+      if (typeof HistoryManager !== 'undefined' && !CircuitStore.isUndoRedoOp) {
+          HistoryManager.pushCommand('MOVE_COMPONENT', moveData, `Geser ${dragGroup.length} komponen`);
+      }
     }
   }
   document.addEventListener('mousemove', onMove);
@@ -1497,11 +1514,8 @@ function startTouchDragComponent(e, compId) {
     const dy = (e.touches[0].clientY - startY) / UIManager.currentZoom;
     
     // 🟢 2. SIMPAN RIWAYAT TEPAT SEBELUM KOORDINAT DIUBAH
-    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
         if (!hasSavedState) {
-            if (typeof HistoryManager !== 'undefined') {
-                HistoryManager.saveStateToUndoStack(`Memindahkan ${dragGroup.length} komponen`);
-            }
             hasSavedState = true;
         }
         moved = true;
@@ -1554,13 +1568,41 @@ function startTouchDragComponent(e, compId) {
   }
   
   function onEnd() {
-    document.removeEventListener('touchmove', onMove);
-    document.removeEventListener('touchend', onEnd);
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    
+    // Sama juga untuk onEnd() di startTouchDragComponent:
+    // document.removeEventListener('touchmove', onMove);
+    // document.removeEventListener('touchend', onEnd);
+    
     if (moved) {
+      let moveData = { components: [], connections: [] };
+
+      // Catat pergeseran komponen
       dragGroup.forEach(item => {
         const cd = CircuitStore.components.find(c => c.id === item.id);
-        if (cd) { cd.x = parseFloat(item.el.style.left)||0; cd.y = parseFloat(item.el.style.top)||0; }
+        if (cd) { 
+            cd.x = parseFloat(item.el.style.left) || 0; 
+            cd.y = parseFloat(item.el.style.top) || 0; 
+            moveData.components.push({
+                id: item.id, origX: item.origL, origY: item.origT, newX: cd.x, newY: cd.y
+            });
+        }
       });
+
+      // Catat pergeseran kabel yang ikut tertarik
+      affectedConnections.forEach(ac => {
+          moveData.connections.push({
+              id: ac.conn.id,
+              origWaypoints: JSON.parse(JSON.stringify(ac.origWaypoints || [])),
+              newWaypoints: JSON.parse(JSON.stringify(ac.conn.waypoints || []))
+          });
+      });
+
+      // 🟢 REKAM AKSI MOVE_COMPONENT KE MEMORI
+      if (typeof HistoryManager !== 'undefined' && !CircuitStore.isUndoRedoOp) {
+          HistoryManager.pushCommand('MOVE_COMPONENT', moveData, `Geser ${dragGroup.length} komponen`);
+      }
     }
   }
   document.addEventListener('touchmove', onMove, { passive: false });
@@ -1718,7 +1760,14 @@ window.addEventListener('mouseup', () => {
 // ─── Delete component ──────────────────────────────────────────────────────────
 function deleteSelectedComponents() {
   if (CircuitStore.selectedComponents.length === 0) return;
-  HistoryManager.saveStateToUndoStack(`Menghapus ${CircuitStore.selectedComponents.length} komponen`);
+  const deletedComps = CircuitStore.components.filter(c => CircuitStore.selectedComponents.includes(c.id)).map(c => JSON.parse(JSON.stringify({ ...c, element: undefined })));
+    const deletedConns = CircuitStore.connections.filter(conn => 
+        CircuitStore.selectedComponents.includes(conn.source.compId) || CircuitStore.selectedComponents.includes(conn.target.compId)
+    ).map(c => JSON.parse(JSON.stringify(c)));
+
+    if (typeof HistoryManager !== 'undefined' && !CircuitStore.isUndoRedoOp) {
+        HistoryManager.pushCommand('REMOVE_COMPONENT', { components: deletedComps, connections: deletedConns }, `Hapus komponen`);
+    }
 
   CircuitStore.selectedComponents.forEach(id => {
     if (CircuitStore.connectionStart && CircuitStore.connectionStart.compId === id) {
@@ -1745,7 +1794,14 @@ function deleteSingleComponent(id) {
     return;
   }
 
-  HistoryManager.saveStateToUndoStack('Menghapus komponen');
+  const deletedComp = CircuitStore.components.find(c => c.id === id);
+    if (!deletedComp) return;
+    const compCopy = JSON.parse(JSON.stringify({ ...deletedComp, element: undefined }));
+    const deletedConns = CircuitStore.connections.filter(conn => conn.source.compId === id || conn.target.compId === id).map(c => JSON.parse(JSON.stringify(c)));
+    
+    if (typeof HistoryManager !== 'undefined' && !CircuitStore.isUndoRedoOp) {
+        HistoryManager.pushCommand('REMOVE_COMPONENT', { components: [compCopy], connections: deletedConns }, `Hapus komponen`);
+    }
   if (CircuitStore.connectionStart && CircuitStore.connectionStart.compId === id) {
     CircuitStore.connectionStart = null;
     document.querySelectorAll('.connection-point').forEach(p => p.classList.remove('pending'));
@@ -1763,32 +1819,38 @@ function deleteSingleComponent(id) {
   if (CircuitStore.isSimulationActive) SimulationEngine.run();
 }
 
-
 // ─── Switch ────────────────────────────────────────────────────────────────────
 function toggleSwitch(id) {
   id = Number(id);
   const comp = document.getElementById(`comp-${id}`);
   const cd = CircuitStore.components.find(c => c.id === id);
   if (!comp || !cd) return;
+
+  const oldData = JSON.parse(JSON.stringify({ ...cd, element: undefined }));
+
   const next = comp.dataset.state === '0' ? '1' : '0';
   comp.dataset.state = next; cd.state = next;
 
   const cdiv = document.getElementById(`content-${id}`);
   if (cdiv) ComponentDefs.updateContent(cd.type, id, cd, cdiv, comp);
-  if (CircuitStore.isSimulationActive) SimulationEngine.run();
 
-  // --- TAMBAHAN KODE UNDO/REDO DI SINI ---
-  if (typeof HistoryManager !== 'undefined') {
-      HistoryManager.saveStateToUndoStack(`Mengubah status saklar`);
+  const newData = JSON.parse(JSON.stringify({ ...cd, element: undefined }));
+  if (typeof HistoryManager !== 'undefined' && !CircuitStore.isUndoRedoOp) {
+      HistoryManager.pushCommand('CHANGE_PARAM', { compId: id, oldData, newData }, `Ubah status saklar`);
   }
-}
 
+  if (CircuitStore.isSimulationActive) SimulationEngine.run();
+}
 
 // ─── Clear & misc ──────────────────────────────────────────────────────────────
 function clearCanvas() {
   if (!CircuitStore.components.length) return UIManager.showToast('Canvas sudah kosong');
   UIManager.showConfirmToast('Hapus semua komponen dan koneksi?', () => {
-    HistoryManager.saveStateToUndoStack('Clear canvas');
+    if (typeof HistoryManager !== 'undefined' && !CircuitStore.isUndoRedoOp) {
+        const allComps = CircuitStore.components.map(c => JSON.parse(JSON.stringify({ ...c, element: undefined })));
+        const allConns = JSON.parse(JSON.stringify(CircuitStore.connections));
+        HistoryManager.pushCommand('REMOVE_COMPONENT', { components: allComps, connections: allConns }, 'Bersihkan kanvas');
+    }
 
     const canvas = document.getElementById('canvas');
     Array.from(canvas.children).forEach(child => {
@@ -1920,7 +1982,6 @@ window.pasteClipboard = function() {
   }
   if (!circuitClipboard || !circuitClipboard.components.length) return;
   
-  HistoryManager.saveStateToUndoStack('Paste Komponen');
   clearSelection();
 
   const idMap = {}; // Peta memori untuk menyambungkan kabel lama ke ID baru
@@ -1992,6 +2053,13 @@ window.pasteClipboard = function() {
 
   drawConnections(); updateConnectionPointVisuals();
   if (CircuitStore.isSimulationActive) SimulationEngine.run();
+  if (typeof HistoryManager !== 'undefined' && !CircuitStore.isUndoRedoOp) {
+      // Rekam apa saja yang baru ditempelkan
+      const pastedCompsData = CircuitStore.components.filter(c => pastedIds.includes(c.id)).map(c => JSON.parse(JSON.stringify({ ...c, element: undefined })));
+      const pastedConnsData = CircuitStore.connections.filter(c => pastedIds.includes(c.source.compId) || pastedIds.includes(c.target.compId)).map(c => JSON.parse(JSON.stringify(c)));
+      
+      HistoryManager.pushCommand('PASTE_COMPONENT', { components: pastedCompsData, connections: pastedConnsData }, 'Paste komponen');
+  }
   UIManager.showToast(`📌 ${circuitClipboard.components.length} Komponen Ditempel`);
 };
 
@@ -2088,8 +2156,7 @@ function init() {
         createConnection(3, 0, 4, 0);
         drawConnections(); updateConnectionPointVisuals();
         CircuitStore.undoStack = []; CircuitStore.redoStack = []; HistoryManager.updateUndoRedoButtons();
-        HistoryManager.saveStateToUndoStack('Initial state');
-      });
+      })
     }, 300);
   }
   CircuitStore.hasUnsavedChanges = false;
@@ -2321,15 +2388,18 @@ window.rotateComponent = (id) => {
   const compEl = document.getElementById(`comp-${id}`);
   if (!compData || !compEl) return;
 
-  // Putar berputar 90 derajat searah jarum jam (0 -> 90 -> 180 -> 270 -> 0)
+  // 🟢 1. Rekam posisi sebelum diputar
+  const oldData = JSON.parse(JSON.stringify({ ...compData, element: undefined }));
+
   compData.rotation = (compData.rotation + 90) % 360;
   compEl.style.transform = `rotate(${compData.rotation}deg)`;
-
-  // SANGAT PENTING: Gambar ulang semua kabel karena posisi koordinat pin ikut berputar
   drawConnections();
 
-  // Simpan aksi ke dalam sistem Undo/Redo
-  HistoryManager.saveStateToUndoStack(`Memutar komponen ${compData.type}`);
+  // 🟢 2. Rekam posisi setelah diputar & masukkan ke memori Undo
+  const newData = JSON.parse(JSON.stringify({ ...compData, element: undefined }));
+  if (typeof HistoryManager !== 'undefined' && !CircuitStore.isUndoRedoOp) {
+      HistoryManager.pushCommand('CHANGE_PARAM', { compId: id, oldData, newData }, `Memutar komponen`);
+  }
 
   if (CircuitStore.isSimulationActive) SimulationEngine.run();
 };
@@ -2604,8 +2674,9 @@ function clearAllWires() {
   UIManager.showConfirmToast('Apakah Anda yakin ingin memotong SEMUA kabel? (Komponen akan tetap aman di posisinya)', () => {
 
     // 1. Simpan memori agar bisa di-Undo (Ctrl+Z)
-    if (typeof HistoryManager !== 'undefined') {
-        HistoryManager.saveStateToUndoStack('Hapus semua kabel');
+    if (typeof HistoryManager !== 'undefined' && !CircuitStore.isUndoRedoOp) {
+        const allConns = JSON.parse(JSON.stringify(CircuitStore.connections));
+        HistoryManager.pushCommand('REMOVE_COMPONENT', { components: [], connections: allConns }, 'Gunting semua kabel');
     }
 
     // 2. Kosongkan database kabel
@@ -2624,83 +2695,6 @@ function clearAllWires() {
     UIManager.showToast('✂️ Semua kabel berhasil dipotong');
   });
 }
-
-// ─── LIVE TICKER (OSILOSKOP & CLOCK GENERATOR) ─────────────────────────────
-// ─── LIVE TICKER DENGAN TIME CATCH-UP & BATCH OPTIMIZATION ─────────────
-setInterval(() => {
-  if (typeof CircuitStore === 'undefined' || !CircuitStore.isSimulationActive) return;
-  
-  let needsRun = false;
-  let needsAnalogUpdate = false;
-  const nowTs = Date.now();
-  const MAX_CATCHUP_STEPS = 50; // Safety limit
-  
-  CircuitStore.components.forEach(c => {
-    // Clock Pulse dengan Time Catch-up
-    if (c.type === 'clock_pulse') {
-      const freq = Math.min(c.freqValue || 2, 1000); // Batasi maks 1 KHz
-      const halfPeriodMs = 1000 / freq / 2;
-      
-      if (!c._lastToggle) c._lastToggle = nowTs;
-      
-      let steps = 0;
-      
-      // Time catch-up loop
-      while (nowTs - c._lastToggle >= halfPeriodMs && steps < MAX_CATCHUP_STEPS) {
-        c.state = c.state === '1' ? '0' : '1';
-        c._lastToggle += halfPeriodMs; // Anti-drift
-        
-        // Digital logic (ringan)
-        if (typeof SimulationEngine !== 'undefined') {
-          SimulationEngine.solveDigitalLogic();
-        }
-        
-        steps++;
-      }
-      
-      if (steps > 0) {
-        needsAnalogUpdate = true; // Tandai untuk update analog nanti
-        needsRun = true;
-      }
-      
-      // Debug info
-      if (steps > 10) {
-        console.debug(`Clock catch-up: ${steps} steps, freq: ${freq}Hz`);
-      }
-    }
-    
-    // Flasher (simple toggle)
-    if (c.type === 'flasher') {
-      const period = c.customValue || 500;
-      if (nowTs - (c._lastToggle || 0) >= period) {
-        c.state = c.state === '1' ? '0' : '1';
-        c._lastToggle = nowTs;
-        needsRun = true;
-      }
-    }
-  });
-  
-  // Batch analog physics update (hanya sekali!)
-  if (needsAnalogUpdate && typeof SimulationEngine !== 'undefined') {
-    SimulationEngine.solveAnalogPhysics();
-  }
-  
-  // Oscilloscope refresh (throttled)
-  if (needsRun) { // Hanya refresh jika ada perubahan
-    const oscils = CircuitStore.components.filter(c => c.type === 'oscilloscope');
-    if (oscils.length > 0) {
-      requestAnimationFrame(() => {
-        oscils.forEach(c => {
-          const cd = document.getElementById(`content-${c.id}`);
-          if (cd && typeof ComponentDefs !== 'undefined') {
-            ComponentDefs.updateDOMState(c.type, c, cd, c.id);
-          }
-        });
-      });
-    }
-  }
-  
-}, 16);
 
 // =========================================================
 // FITUR PENCARIAN & FILTER KATEGORI KOMPONEN
@@ -2796,3 +2790,154 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// =========================================================
+// HELPER UNDO/REDO (COMMAND PATTERN EXECUTORS)
+// =========================================================
+window.undoAddComponent = function(data) {
+    const el = document.getElementById(`comp-${data.compId}`);
+    if (el) el.remove();
+    CircuitStore.removeComponent(data.compId);
+    if (CircuitStore.selectedComponents.includes(data.compId)) clearSelection();
+};
+
+window.redoAddComponent = function(data) {
+    const compData = data.compData;
+    const div = buildComponentElement(compData); 
+    document.getElementById('canvas').appendChild(div);
+    
+    let finalComp = compData;
+    if (typeof ComponentRegistry !== 'undefined') {
+        const ComponentClass = ComponentRegistry[compData.type] || BaseComponent;
+        finalComp = new ComponentClass(compData);
+    }
+    finalComp.element = div;
+    CircuitStore.addComponent(finalComp);
+};
+
+window.undoRedoMove = function(data, isUndo) {
+    // 1. Kembalikan koordinat komponen
+    data.components.forEach(c => {
+        const comp = CircuitStore.components.find(x => x.id === c.id);
+        const el = document.getElementById(`comp-${c.id}`);
+        if (comp && el) {
+            const targetX = isUndo ? c.origX : c.newX;
+            const targetY = isUndo ? c.origY : c.newY;
+            comp.x = targetX;
+            comp.y = targetY;
+            el.style.left = `${targetX}px`;
+            el.style.top = `${targetY}px`;
+        }
+    });
+    
+    // 2. Kembalikan bentuk belokan kabel yang ikut bergeser
+    data.connections.forEach(c => {
+        const conn = CircuitStore.connections.find(x => x.id === c.id);
+        if (conn) {
+            conn.waypoints = isUndo ? JSON.parse(JSON.stringify(c.origWaypoints)) : JSON.parse(JSON.stringify(c.newWaypoints));
+        }
+    });
+};
+
+// -----------------------------------------------------
+// EKSEKUTOR HAPUS KOMPONEN & KABEL (DAN CLEAR CANVAS)
+// -----------------------------------------------------
+window.restoreDeletedData = function(data) {
+    // 1. Munculkan kembali komponen-komponen ke layar
+    data.components.forEach(compData => {
+        const div = buildComponentElement(compData); 
+        document.getElementById('canvas').appendChild(div);
+        
+        let finalComp = compData;
+        if (typeof ComponentRegistry !== 'undefined') {
+            const ComponentClass = ComponentRegistry[compData.type] || BaseComponent;
+            finalComp = new ComponentClass(compData);
+        }
+        finalComp.element = div;
+        CircuitStore.addComponent(finalComp);
+    });
+    
+    // 2. Jahit kembali kabel-kabel yang terputus
+    data.connections.forEach(conn => {
+        CircuitStore.addConnection(conn);
+    });
+};
+
+window.removeDeletedData = function(data) {
+    // 1. Lenyapkan komponen dari layar
+    data.components.forEach(c => {
+        const el = document.getElementById(`comp-${c.id}`);
+        if (el) el.remove();
+        CircuitStore.removeComponent(c.id);
+    });
+    
+    // 2. Lenyapkan sisa-sisa kabel (jika aksi ini adalah Clear Wires)
+    data.connections.forEach(c => {
+        CircuitStore.connections = CircuitStore.connections.filter(conn => conn.id !== c.id);
+    });
+};
+
+// -----------------------------------------------------
+// EKSEKUTOR KHUSUS MENAMBAH/MENGHAPUS KABEL TUNGGAL
+// -----------------------------------------------------
+window.undoAddWire = function(data) {
+    CircuitStore.connections = CircuitStore.connections.filter(c => c.id !== data.added.id);
+    if (data.removed) CircuitStore.addConnection(data.removed); // Pulihkan kabel lama jika sempat tertimpa
+};
+
+window.redoAddWire = function(data) {
+    if (data.removed) CircuitStore.connections = CircuitStore.connections.filter(c => c.id !== data.removed.id);
+    CircuitStore.addConnection(data.added);
+};
+
+window.undoRemoveWire = function(data) {
+    CircuitStore.addConnection(data);
+};
+
+window.redoRemoveWire = function(data) {
+    CircuitStore.connections = CircuitStore.connections.filter(c => c.id !== data.id);
+};
+
+// -----------------------------------------------------
+// EKSEKUTOR PERCABANGAN KABEL (SPLICE / WIRE NODE)
+// -----------------------------------------------------
+window.undoSplice = function(data) {
+    // 1. Lenyapkan kabel pecahan dan kabel baru
+    data.addedConnections.forEach(c => {
+        CircuitStore.connections = CircuitStore.connections.filter(conn => conn.id !== c.id);
+    });
+    
+    // 2. Lenyapkan titik solder (Junction/Wire Node)
+    data.addedComponents.forEach(comp => {
+        const el = document.getElementById(`comp-${comp.id}`);
+        if (el) el.remove();
+        CircuitStore.removeComponent(comp.id);
+    });
+    
+    // 3. Jahit kembali kabel lawas yang tadinya dipotong
+    data.removedConnections.forEach(c => CircuitStore.addConnection(c));
+};
+
+window.redoSplice = function(data) {
+    // 1. Potong kembali kabel lawas
+    data.removedConnections.forEach(c => {
+        CircuitStore.connections = CircuitStore.connections.filter(conn => conn.id !== c.id);
+    });
+    
+    // 2. Munculkan kembali titik solder menggunakan arsitektur OOP baru
+    data.addedComponents.forEach(compData => {
+        const div = buildComponentElement(compData); 
+        document.getElementById('canvas').appendChild(div);
+        
+        let finalComp = compData;
+        if (typeof ComponentRegistry !== 'undefined') {
+            const ComponentClass = ComponentRegistry[compData.type] || BaseComponent;
+            finalComp = new ComponentClass(compData);
+        }
+        finalComp.element = div;
+        CircuitStore.addComponent(finalComp);
+    });
+    
+    // 3. Pasang kembali kabel-kabel cabang
+    data.addedConnections.forEach(c => CircuitStore.addConnection(c));
+};

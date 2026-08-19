@@ -257,6 +257,17 @@ body {
 .connection-point.connected { background: #16a34a; border-color: #14532d; }
 .connection-point.pending { box-shadow: 0 0 10px rgba(34,197,94,0.8); background: #22c55e; transform: translate(-50%, -50%) scale(1.3); }
 .leg-active { stroke: var(--success) !important; }
+/* 🟢 MENYEMBUNYIKAN PIN VIRTUAL KHUSUS UNTUK TITIK SOLDER */
+.circuit-component[data-type="wire_node"] .connection-point {
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+/* Biarkan bersinar hijau hanya saat pengguna sedang menarik/menyambung kabel baru ke titik ini */
+.circuit-component[data-type="wire_node"] .connection-point.pending {
+    background: rgba(34, 197, 94, 0.5) !important; /* Hijau tembus pandang */
+    box-shadow: 0 0 10px rgba(34,197,94,0.8) !important;
+}
 
 /* ==========================================================================
    6. TOMBOL HAPUS & ROTASI DI KOMPONEN KANVAS
@@ -305,12 +316,8 @@ body {
 .circuit-component[data-type="bjt_npn"] .rotate-btn,
 .circuit-component[data-type="bjt_pnp"] .rotate-btn,
 .circuit-component[data-type="push_button_nc"] .rotate-btn { top: auto; bottom: -8px; }
-.circuit-component[data-type="wire_node"] .rotate-btn,
+.circuit-component[data-type="wire_node"] .rotate-btn { display: none !important; }
 
-/* B. Menyembunyikan pin kelistrikan khusus pada Titik Solder (wire_node) */
-.circuit-component[data-type="wire_node"] .connection-point {
-    opacity: 0; /* Membuat pin merah/hijau menjadi tembus pandang */
-}
   /* ==========================================================================
    7. MEDIA QUERIES (DESKTOP & MOBILE RESPONSIVE)
    ========================================================================== */

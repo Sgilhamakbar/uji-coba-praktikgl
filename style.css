@@ -225,8 +225,9 @@ body {
    5. KOMPONEN SIRKUIT DI KANVAS
    ========================================================================== */
 .component-card {
-  position: relative;
-  background: var(--bg-container); border: 1px solid var(--border-color); border-radius: var(--radius);
+  background: var(--bg-container);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
   padding: 10px 12px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none; display: flex; align-items: center; gap: 12px;
 }

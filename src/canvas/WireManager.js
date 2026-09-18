@@ -964,9 +964,9 @@ export function drawConnections() {
 
                     const jId = ++CircuitStore.componentIdCounter;
                     const compData = {
-                        id: jId, type: 'wire_node', inputs: 4, outputs: 0, 
+                        id: jId, type: 'wire_node', inputs: 4, outputs: 4, 
                         x: mx - 10, y: my - 10, 
-                        state: '0', inputStates: [0,0,0,0], outputState: 0, simV: 0, simI: 0
+                        state: '0', inputStates: [0,0,0,0], outputStates: [0,0,0,0], outputState: 0, simV: 0, simI: 0
                     };
                     const div = buildComponentElement(compData);
                     document.getElementById('canvas').appendChild(div);

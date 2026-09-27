@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'prompt', // Otomatis mengupdate cache di HP jika ada versi web baru
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'], // Aset statis pendukung
       manifest: {
-        name: 'Simulator Rangkaian Digital', // Nama panjang aplikasi saat diinstall
-        short_name: 'Simulasi Lab', // Nama pendek di bawah ikon HP
+        name: 'Simulator Analog & Digital', // Nama panjang aplikasi saat diinstall
+        short_name: 'Simulasi LIstrik', // Nama pendek di bawah ikon HP
         description: 'Aplikasi Simulator Rangkaian Listrik dan Logika Digital',
         theme_color: '#ffffff', // Warna tema bar di HP
         background_color: '#ffffff',

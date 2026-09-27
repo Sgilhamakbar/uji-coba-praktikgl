@@ -21,7 +21,36 @@
     <div class="sidebar-top-fixed">
       <div class="sidebar-header">
         <div class="sidebar-title">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--primary)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+          
+          <!-- Ikon Roda Gigi & Petir Baru (Disesuaikan ukurannya) -->
+          <svg viewBox="0 0 100 100" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <mask id="gear-hole">
+                    <rect width="100" height="100" fill="white" />
+                    <!-- Lingkaran pemotong -->
+                    <circle cx="40" cy="40" r="15" fill="black" /> 
+                </mask>
+            </defs>
+
+            <!-- RODA GIGI: Menggunakan currentColor agar warnanya mengikuti teks -->
+            <g mask="url(#gear-hole)" fill="currentColor">
+                <circle cx="40" cy="40" r="28" />
+                <polygon points="35,2 45,2 48,18 32,18" />
+                <polygon points="35,2 45,2 48,18 32,18" transform="rotate(45 40 40)" />
+                <polygon points="35,2 45,2 48,18 32,18" transform="rotate(90 40 40)" />
+                <polygon points="35,2 45,2 48,18 32,18" transform="rotate(135 40 40)" />
+                <polygon points="35,2 45,2 48,18 32,18" transform="rotate(180 40 40)" />
+                <polygon points="35,2 45,2 48,18 32,18" transform="rotate(225 40 40)" />
+                <polygon points="35,2 45,2 48,18 32,18" transform="rotate(270 40 40)" />
+                <polygon points="35,2 45,2 48,18 32,18" transform="rotate(315 40 40)" />
+            </g>
+
+            <!-- PETIR: Isi mengikuti warna teks, garis tepi berwarna Oranye -->
+            <polygon points="78,35 50,65 65,65 45,95 88,55 70,55" 
+                     stroke="#ff9800" 
+                     stroke-width="4" 
+                     stroke-linejoin="round" />
+          </svg>
           <span class="title-text">Simulasi Listrik</span>
         </div>
         
@@ -76,7 +105,7 @@
         <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M7 12c1.5-4 3.5-4 5 0s3.5 4 5 0"></path></svg></div>
         <div class="comp-info"><div class="comp-name">V-Sine (AC)</div><div class="comp-desc">Generator Gelombang Sinus</div></div>
       </div>
-      <div class="component-card" draggable="true" data-type="transformer" data-inputs="2" data-outputs="3">
+      <div class="component-card" draggable="true" data-type="transformer_2p3s" data-inputs="2" data-outputs="3">
         <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v16 M18 4v16 M12 2v20 M14 2v20"/></svg></div>
         <div class="comp-info"><div class="comp-name">Transformator</div><div class="comp-desc">Trafo 2P3S (CT)</div></div>
       </div>
@@ -137,6 +166,25 @@
         <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="12" r="2" fill="currentColor"/><circle cx="18" cy="7" r="2" fill="currentColor"/><circle cx="18" cy="17" r="2" fill="currentColor"/><line x1="7" y1="11" x2="16" y2="8"/></svg></div>
         <div class="comp-info"><div class="comp-name">Switch SPDT</div><div class="comp-desc">Sakelar Tukar (3 Pin)</div></div>
       </div>
+      <!-- Modul Analog Joystick KY-023 -->
+      <div class="component-card" draggable="true" data-type="joystick" data-inputs="2" data-outputs="3">
+        <div class="comp-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <!-- Papan PCB Hitam -->
+            <rect x="3" y="3" width="18" height="15" rx="2" fill="#1e293b" stroke="#0f172a"/>
+            <!-- Lingkaran Batas Joystick -->
+            <circle cx="12" cy="10" r="5" fill="#0f172a" stroke="#334155"/>
+            <!-- Stik Analog -->
+            <circle cx="12" cy="10" r="3" fill="#64748b" stroke="#94a3b8"/>
+            <!-- 5 Kaki Pin -->
+            <path d="M5 18v3M8.5 18v3M12 18v3M15.5 18v3M19 18v3" stroke="#94a3b8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="comp-info">
+          <div class="comp-name">Analog Joystick</div>
+          <div class="comp-desc">Sumbu X, Y, dan Tombol Z</div>
+        </div>
+      </div>
       <div class="component-card" draggable="true" data-type="switch_dpst" data-inputs="2" data-outputs="2">
         <div class="comp-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -167,18 +215,6 @@
     <!-- 3. KABEL & KOMPONEN PASIF -->
     <div class="sidebar-section">
       <h4>Kabel & Komponen Pasif</h4>
-      <div class="component-card" draggable="true" data-type="wire_1to1" data-inputs="1" data-outputs="1">
-        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="4" y1="12" x2="20" y2="12"/><circle cx="4" cy="12" r="1"/><circle cx="20" cy="12" r="1"/></svg></div>
-        <div class="comp-info"><div class="comp-name">Kabel Ekstensi</div><div class="comp-desc">Sambungan Lurus</div></div>
-      </div>
-      <div class="component-card" draggable="true" data-type="wire_1to2" data-inputs="1" data-outputs="2">
-        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 12h8v-6h8 M12 12v6h8"/><circle cx="4" cy="12" r="1"/><circle cx="20" cy="6" r="1"/><circle cx="20" cy="18" r="1"/></svg></div>
-        <div class="comp-info"><div class="comp-name">Kabel Cabang 2</div><div class="comp-desc">1 In, 2 Out</div></div>
-      </div>
-      <div class="component-card" draggable="true" data-type="junction" data-inputs="1" data-outputs="3">
-        <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M12 2v7m0 6v7m-10-10h7m6 0h7"/></svg></div>
-        <div class="comp-info"><div class="comp-name">Node Cabang 3</div><div class="comp-desc">Bagi 1 ke 3 arah</div></div>
-      </div>
       <div class="component-card" draggable="true" data-type="net_tunnel" data-inputs="1" data-outputs="0">
         <div class="comp-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -197,6 +233,25 @@
       <div class="component-card" draggable="true" data-type="resistor" data-inputs="1" data-outputs="1">
         <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linejoin="round"><path d="M2 12h3l2.5-5 5 10 5-10 2.5 5h3"/></svg></div>
         <div class="comp-info"><div class="comp-name">Resistor</div><div class="comp-desc">Hambatan (Ohm)</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="capacitor_polarized" data-inputs="1" data-outputs="1">
+        <div class="comp-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <!-- Kabel Kiri & Kanan -->
+            <line x1="2" y1="12" x2="9" y2="12"/>
+            <line x1="15" y1="12" x2="22" y2="12"/>
+            <!-- Plat Positif (Lurus) -->
+            <line x1="9" y1="6" x2="9" y2="18"/>
+            <!-- Plat Negatif (Lengkung) -->
+            <path d="M15 6 Q 12 12 15 18"/>
+            <!-- Simbol Plus -->
+            <text x="5" y="8" font-size="8" font-weight="bold" fill="#ef4444" stroke="none">+</text>
+          </svg>
+        </div>
+        <div class="comp-info">
+          <div class="comp-name">Elco (Polarized)</div>
+          <div class="comp-desc">Awas meledak jika terbalik!</div>
+        </div>
       </div>
       <div class="component-card" draggable="true" data-type="capacitor" data-inputs="1" data-outputs="1">
         <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="2" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="22" y2="12"/><line x1="10" y1="6" x2="10" y2="18"/><line x1="14" y1="6" x2="14" y2="18"/></svg></div>
@@ -227,6 +282,24 @@
       <div class="component-card" draggable="true" data-type="diode_bridge" data-inputs="2" data-outputs="2">
         <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" transform="rotate(45 12 12)"></rect></svg></div>
         <div class="comp-info"><div class="comp-name">Dioda Bridge</div><div class="comp-desc">Penyearah / Pelindung Polaritas</div></div>
+      </div>
+      <div class="component-card" draggable="true" data-type="bjt_pnp_bd140" data-inputs="2" data-outputs="1">
+        <div class="comp-icon">
+          <!-- Ikon SVG TO-126 (Blok persegi dengan lubang baut tengah) -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="6" y="2" width="12" height="15" rx="1" fill="#1e293b"/>
+            <!-- Logam Pendingin Belakang (Tampak atas) -->
+            <path d="M7 2h10v2H7z" fill="#94a3b8" stroke="none"/>
+            <circle cx="12" cy="6" r="2" fill="#cbd5e1" stroke="none"/>
+            <line x1="8" y1="17" x2="8" y2="22" stroke-width="2"/>
+            <line x1="12" y1="17" x2="12" y2="22" stroke-width="2"/>
+            <line x1="16" y1="17" x2="16" y2="22" stroke-width="2"/>
+          </svg>
+        </div>
+        <div class="comp-info">
+          <div class="comp-name">PNP BD140</div>
+          <div class="comp-desc">Power Switch (Max 1.5A)</div>
+        </div>
       </div>
       <div class="component-card" draggable="true" data-type="bjt_npn" data-inputs="2" data-outputs="1">
         <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><line x1="7" y1="12" x2="11" y2="12"></line><line x1="11" y1="7" x2="11" y2="17"></line><line x1="11" y1="9" x2="16" y2="6"></line><line x1="11" y1="15" x2="16" y2="18"></line></svg></div>
@@ -260,7 +333,7 @@
 
     <!-- 4a. SEMIKONDUKTOR DIGITAL -->
     <div class="sidebar-section">
-      <h4>Mikrokontroler (Terprogram)</h4>
+      <h4>Mikrokontroler</h4>
       <!-- data-inputs="22" menandakan 22 kaki kabel -->
       <div class="component-card" draggable="true" data-type="arduino_uno" data-inputs="29" data-outputs="0">
         <div class="comp-icon">
@@ -296,6 +369,25 @@
         <div class="comp-info">
           <div class="comp-name">HC-SR04</div>
           <div class="comp-desc">Sensor Ultrasonik (Jarak)</div>
+        </div>
+      </div>
+      <!-- Modul Sensor Garis TCRT5000 -->
+      <div class="component-card" draggable="true" data-type="tcrt5000" data-inputs="2" data-outputs="2">
+        <div class="comp-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <!-- Papan PCB Biru -->
+            <rect x="4" y="4" width="16" height="13" rx="2" fill="#0284c7" stroke="#0369a1"/>
+            <!-- Lensa Hitam TCRT5000 -->
+            <rect x="6" y="6" width="12" height="6" fill="#0f172a" stroke="none"/>
+            <circle cx="9" cy="9" r="2" fill="#3b82f6" stroke="none"/>
+            <circle cx="15" cy="9" r="2" fill="#1e293b" stroke="#cbd5e1" stroke-width="0.5"/>
+            <!-- 4 Kaki Pin -->
+            <path d="M6 17v4M10 17v4M14 17v4M18 17v4" stroke="#94a3b8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="comp-info">
+          <div class="comp-name">Sensor Garis (IR)</div>
+          <div class="comp-desc">TCRT5000 Hitam/Putih (D0 & A0)</div>
         </div>
       </div>
       <!-- Modul Motor Driver L298N -->
@@ -439,6 +531,27 @@
       <div class="component-card" draggable="true" data-type="motor_dc" data-inputs="1" data-outputs="1">
         <div class="comp-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><text x="12" y="16" text-anchor="middle" font-size="10" font-weight="bold">M</text></svg></div>
         <div class="comp-info"><div class="comp-name">Motor DC</div><div class="comp-desc">Mesin Berputar (RPM)</div></div>
+      </div>
+      <!-- Modul Servo Motor 360 Derajat -->
+      <div class="component-card" draggable="true" data-type="servo_360" data-inputs="3" data-outputs="0">
+        <div class="comp-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <!-- Bodi Servo -->
+            <rect x="4" y="8" width="16" height="12" rx="2" fill="#1e293b" stroke="#0f172a"/>
+            <!-- Telinga Baut (Mounting) -->
+            <path d="M 2 12 h 2 M 20 12 h 2" stroke="#94a3b8" stroke-width="3"/>
+            <!-- Roda/Horn Bundar -->
+            <circle cx="12" cy="8" r="5" fill="#facc15" stroke="#ca8a04"/>
+            <circle cx="12" cy="8" r="1.5" fill="#1e293b"/>
+            <!-- Panah Melingkar (Simbol 360) -->
+            <path d="M 9 7 A 3 3 0 0 1 14 6" stroke="#1e293b" stroke-width="1" stroke-linecap="round"/>
+            <path d="M 15 9 A 3 3 0 0 1 10 10" stroke="#1e293b" stroke-width="1" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="comp-info">
+          <div class="comp-name">Servo 360° (Roda)</div>
+          <div class="comp-desc">Putaran Tanpa Batas (Continuous)</div>
+        </div>
       </div>
       <div class="component-card" draggable="true" data-type="speaker" data-inputs="2" data-outputs="0">
         <div class="comp-icon">
@@ -594,6 +707,21 @@
         <div class="comp-info">
           <div class="comp-name">IC 74164</div>
           <div class="comp-desc">8-Bit Shift Register (Serial In)</div>
+        </div>
+      </div>
+      <!-- Modul IC 74HC595 -->
+      <div class="component-card" draggable="true" data-type="ic_74hc595" data-inputs="7" data-outputs="9">
+        <div class="comp-icon">
+          <!-- Ikon SVG DIP-16 (8 Pin Kiri, 8 Pin Kanan) -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="6" y="2" width="12" height="20" rx="2"/>
+            <path d="M2 3h4 M2 5.5h4 M2 8h4 M2 10.5h4 M2 13h4 M2 15.5h4 M2 18h4 M2 20.5h4"/>
+            <path d="M22 3h-4 M22 5.5h-4 M22 8h-4 M22 10.5h-4 M22 13h-4 M22 15.5h-4 M22 18h-4 M22 20.5h-4"/>
+          </svg>
+        </div>
+        <div class="comp-info">
+          <div class="comp-name">IC 74HC595</div>
+          <div class="comp-desc">8-Bit Shift Register (Latch)</div>
         </div>
       </div>
       <div class="component-card" draggable="true" data-type="ic_7448" data-inputs="9" data-outputs="7">
@@ -800,7 +928,7 @@
     </button>
   </div>
   <button class="btn btn-info" id="btnTruthTable" title="Buka Tabel Kebenaran">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg> Tabel
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg> Tabel
   </button>
   <button class="btn btn-info" id="btnSerialMonitor" title="Buka Serial Monitor" style="background: #0f172a; color: #38bdf8; border-color: #38bdf8;">
     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect></svg> Serial
@@ -830,6 +958,9 @@
   <div style="width: 1px; height: 24px; background: var(--border-color); margin: 0 4px;"></div>
 
   <!-- 3. SELEKSI, CLIPBOARD & HAPUS OBJEK -->
+  <button class="btn btn-danger hide-on-mobile" id="btnDelete" title="Hapus Komponen Terpilih (Del)">
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+  </button>
   <button class="btn btn-secondary" id="btnSelectMode"  title="Mode Pilih Banyak">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
   </button>
@@ -841,9 +972,6 @@
   </button>          
   <button class="btn btn-secondary" id="btnPaste" title="Tempel Komponen (Ctrl+V)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>
-  </button>
-  <button class="btn btn-danger hide-on-mobile" id="btnDelete" title="Hapus Komponen Terpilih (Del)">
-    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
   </button>
 
   <div style="width: 1px; height: 24px; background: var(--border-color); margin: 0 4px;"></div>
@@ -950,13 +1078,11 @@
       <rect x="14" y="14" width="7" height="7" rx="1"></rect>
       <rect x="3" y="14" width="7" height="7" rx="1"></rect>
     </svg>
-    <span>Komponen</span>
   </button>
   <button class="nav-item" id="btnWireModeBottom" >
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M4 12h8v-6h8 M12 12v6h8"/><circle cx="4" cy="12" r="2"/><circle cx="20" cy="6" r="2"/><circle cx="20" cy="18" r="2"/>
     </svg>
-    <span>Kabel</span>
   </button>
   <button class="nav-item" >
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
@@ -964,14 +1090,12 @@
       <line x1="3" y1="9" x2="21" y2="9"></line>
       <line x1="9" y1="21" x2="9" y2="9"></line>
     </svg>
-    <span>Tabel</span>
   </button>
   <button class="nav-item" id="btnDeleteBottom">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
       <polyline points="3 6 5 6 21 6"></polyline>
       <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
     </svg>
-    <span>Hapus</span>
   </button>
 </nav>
 
@@ -996,7 +1120,7 @@
       <!-- Baris 1: Isi Teks -->
       <div style="display: flex; flex-direction: column; gap: 6px;">
         <label class="modal-label">Isi Teks / Catatan</label>
-        <input type="text" id="textLabelContent" placeholder="Ketik catatan di sini..." style="width: 100%; height: 34px; padding: 0 10px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); font-size: 13px; box-sizing: border-box;">
+        <textarea id="textLabelContent" placeholder="Ketik catatan di sini...&#10;(Bisa enter untuk baris baru)" style="width: 100%; min-height: 68px; padding: 8px 10px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); font-size: 13px; box-sizing: border-box; resize: vertical; font-family: inherit;"></textarea>
       </div>
 
       <!-- Baris 2: Jenis Font -->
@@ -1019,6 +1143,25 @@
             <option value="fangsong">Fangsong (Chinese)</option>
           </optgroup>
         </select>
+      </div>
+
+      <!-- Baris 2.5: Gaya & Perataan -->
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <label class="modal-label">Gaya & Perataan Teks</label>
+        <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap; padding: 4px 0;">
+          <select id="textLabelAlign" style="flex: 1; height: 34px; padding: 0 10px; border-radius: 4px; border: 1px solid var(--border-color); background: var(--bg-body); color: var(--text-main); font-size: 13px;">
+            <option value="start">Rata Kiri</option>
+            <option value="middle">Rata Tengah</option>
+            <option value="end">Rata Kanan</option>
+          </select>
+          
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <label style="display: flex; align-items: center; gap: 4px; color: var(--text-main); cursor: pointer;" title="Bold"><input type="checkbox" id="textLabelBold"> <b style="font-size: 15px;">B</b></label>
+            <label style="display: flex; align-items: center; gap: 4px; color: var(--text-main); cursor: pointer;" title="Italic"><input type="checkbox" id="textLabelItalic"> <i style="font-family: serif; font-size: 15px;">I</i></label>
+            <label style="display: flex; align-items: center; gap: 4px; color: var(--text-main); cursor: pointer;" title="Underline"><input type="checkbox" id="textLabelUnderline"> <u style="font-size: 15px;">U</u></label>
+            <label style="display: flex; align-items: center; gap: 4px; color: var(--text-main); cursor: pointer;" title="Strikeout"><input type="checkbox" id="textLabelStrike"> <s style="font-size: 15px;">S</s></label>
+          </div>
+        </div>
       </div>
 
       <!-- Baris 3: Ukuran & Warna (Dibagi 2 Kolom Kiri Kanan) -->
@@ -1092,6 +1235,29 @@
       <div><label class="modal-label">Max RPM (pada Rated Voltage)</label><input type="number" id="motorMaxRPM" step="1" class="modal-input"></div>
       <div><label class="modal-label">Coil Resistance (Ω)</label><input type="number" id="motorCoilR" step="0.1" class="modal-input"></div>
     </div>
+    <!-- KELOMPOK INPUT JOYSTICK ANALOG -->
+    <div id="joystickInputGroup" style="display: none; flex-direction: column; gap: 15px; margin-top: 15px;">
+      
+      <div style="background: var(--bg-body); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+        <label class="modal-label" style="display: flex; justify-content: space-between;">
+          Posisi Sumbu X (Kiri - Kanan) <strong id="joyXVal" style="color: var(--primary);">0%</strong>
+        </label>
+        <input type="range" id="joyXSlider" min="-100" max="100" step="1" value="0" style="width: 100%; margin-top: 8px;" oninput="document.getElementById('joyXVal').innerText = this.value + '%';">
+      </div>
+
+      <div style="background: var(--bg-body); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color);">
+        <label class="modal-label" style="display: flex; justify-content: space-between;">
+          Posisi Sumbu Y (Bawah - Atas) <strong id="joyYVal" style="color: var(--primary);">0%</strong>
+        </label>
+        <input type="range" id="joyYSlider" min="-100" max="100" step="1" value="0" style="width: 100%; margin-top: 8px;" oninput="document.getElementById('joyYVal').innerText = this.value + '%';">
+      </div>
+
+      <div style="background: var(--bg-body); padding: 12px; border-radius: 6px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+        <label class="modal-label" style="margin: 0; cursor: pointer;" for="joyBtnCheck">Tekan Tombol Stik (SW)</label>
+        <input type="checkbox" id="joyBtnCheck" style="width: 18px; height: 18px; cursor: pointer;">
+      </div>
+      
+    </div>
     <!-- KELOMPOK INPUT SERVO MOTOR -->
     <div id="servoInputGroup" style="display: none; flex-direction: column; gap: 12px; margin-top: 15px;">
       <div>
@@ -1103,6 +1269,14 @@
         <span style="font-size: 10px; color: var(--text-muted); line-height: 1.4; display: block; margin-top: 6px;">
             *Menentukan batas mekanis tuas saat diberi tegangan penuh 5V.
         </span>
+         <div id="hornSelectContainer">
+          <label class="modal-label">Jenis Baling-baling (Horn)</label>
+          <select id="servoHornType" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #334155; background: var(--bg-main); color: var(--text-main); margin-top: 4px;">
+            <option value="wheel">Roda Bundar (Default)</option>
+            <option value="single">Lengan Tunggal</option>
+            <option value="double">Lengan Ganda</option>
+          </select>
+        </div>
       </div>
     </div>
     <div id="relayInputGroup" style="display: none; flex-direction: column; gap: 12px; margin-top: 15px;">
@@ -1397,7 +1571,7 @@
             *Jangan gunakan delay()! Gunakan logika millis() agar browser tidak lag.
         </span>
 
-        <!-- 🌟 TAMBAHAN BARU: Tombol Upload & Download Kode -->
+        <!--: Tombol Upload, Download Kode & konvert-->
         <div style="display: flex; gap: 8px; margin-top: 10px;">
             <input type="file" id="uploadArduinoInput" accept=".js,.txt,.ino,.c,.cpp" style="display: none;" onchange="UIManager.handleArduinoUpload(event)">
             <button class="btn btn-secondary" onclick="document.getElementById('uploadArduinoInput').click()" style="flex: 1; font-size: 11px; padding: 6px; justify-content: center;">
@@ -1407,6 +1581,10 @@
             <button class="btn btn-secondary" onclick="UIManager.downloadArduinoCode()" style="flex: 1; font-size: 11px; padding: 6px; justify-content: center;">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                 Unduh File
+            </button>
+             <button id="btnConvertArduino" class="btn btn-primary" onclick="UIManager.convertArduinoCode()" style="flex: 1.5; font-size: 11px; padding: 6px; justify-content: center; background-color: #8b5cf6; border-color: #8b5cf6;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px;"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><polyline points="21 3 21 8 16 8"/></svg>
+                Konversi Kode
             </button>
         </div>
     </div>
@@ -1452,14 +1630,24 @@
   </div>
 </div>
 
-<div class="modal" id="truthModal">
-  <div class="modal-content" style="max-width: 600px;">
-    <h2><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg> Tabel Kebenaran</h2>
-    <div style="overflow-x: auto;">
-      <table class="truth-table" id="modal-truth-table"><thead></thead><tbody></tbody></table>
+<!-- MODAL TABEL KEBENARAN (FLOATING WINDOW) -->
+<div id="truthModal" class="floating-window" style="bottom: auto; top: 10%; right: auto; left: 10%;">
+  <!-- Header (Area yang bisa diklik untuk menggeser) -->
+  <div class="floating-header" id="truthModalHeader">
+    <h2 class="sm-title">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg> 
+      Tabel Kebenaran
+    </h2>
+    <button onclick="closeTruthTable()" class="sm-close-btn" title="Tutup">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </button>
+  </div>
+  
+  <!-- Layar Tabel -->
+  <div class="floating-body sm-body" style="background: var(--bg-body); padding: 15px;">
+    <div id="truthTableContainer" style="overflow-x: auto; max-height: 60vh; width: 100%;">
+      <!-- Tabel akan dirender di sini oleh JS -->
     </div>
-    <br>
-    <button class="btn btn-primary" onclick="closeTruthTable()" style="width:100%; justify-content:center;">Tutup</button>
   </div>
 </div>
 
@@ -1580,31 +1768,35 @@
 
   </div>
 </div>
-</div>
 
-<!-- 🎨 PALET WARNA KABEL (GAYA PREMIUM) -->
-    <div id="wireColorPalette" class="wire-palette-container" style="display: none;">
-        <div class="wire-palette-header">Warna Kabel</div>
-        <div class="wire-palette-grid">
-            <!-- Baris 1: Warna Utama -->
-            <button class="color-btn" style="background: #ef4444;" onclick="setWireColor('#ef4444')" title="Merah (VCC)"></button>
-            <button class="color-btn" style="background: #1e293b;" onclick="setWireColor('#1e293b')" title="Hitam (GND)"></button>
-            <button class="color-btn" style="background: #3b82f6;" onclick="setWireColor('#3b82f6')" title="Biru"></button>
-            <button class="color-btn" style="background: #eab308;" onclick="setWireColor('#eab308')" title="Kuning"></button>
-            
-            <!-- Baris 2: Warna Sekunder -->
-            <button class="color-btn" style="background: #22c55e;" onclick="setWireColor('#22c55e')" title="Hijau"></button>
-            <button class="color-btn" style="background: #f97316;" onclick="setWireColor('#f97316')" title="Oranye"></button>
-            <button class="color-btn" style="background: #8b5cf6;" onclick="setWireColor('#8b5cf6')" title="Ungu"></button>
-            <button class="color-btn" style="background: #f8fafc;" onclick="setWireColor('#f8fafc')" title="Putih"></button>
-            
-            <!-- Tombol Lebar untuk Reset -->
-            <button class="color-btn-reset" onclick="setWireColor('')" title="Kembalikan ke Default">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
-                Reset Default
-            </button>
-        </div>
-    </div>
+  <!-- PALET WARNA & UKURAN KABEL -->
+  <div id="wireColorPalette" class="wire-palette-container" style="display: none; flex-direction: column;">
+      <div class="wire-palette-header">Pengaturan Kabel</div>
+      
+      <div style="font-size: 11px; margin-bottom: 5px; color: #94a3b8;">Warna</div>
+      <div class="wire-palette-grid">
+          <!-- Baris 1: Warna Utama -->
+          <button class="color-btn" style="background: #ef4444;" onclick="setWireColor('#ef4444')" title="Merah (VCC)"></button>
+          <button class="color-btn" style="background: #1e293b;" onclick="setWireColor('#1e293b')" title="Hitam (GND)"></button>
+          <button class="color-btn" style="background: #3b82f6;" onclick="setWireColor('#3b82f6')" title="Biru"></button>
+          <button class="color-btn" style="background: #eab308;" onclick="setWireColor('#eab308')" title="Kuning"></button>
+          
+          <!-- Baris 2: Warna Sekunder -->
+          <button class="color-btn" style="background: #22c55e;" onclick="setWireColor('#22c55e')" title="Hijau"></button>
+          <button class="color-btn" style="background: #f97316;" onclick="setWireColor('#f97316')" title="Oranye"></button>
+          <button class="color-btn" style="background: #8b5cf6;" onclick="setWireColor('#8b5cf6')" title="Ungu"></button>
+          <button class="color-btn" style="background: #f8fafc;" onclick="setWireColor('#f8fafc')" title="Putih"></button>
+      </div>
+
+      <div style="font-size: 11px; margin-top: 10px; margin-bottom: 5px; color: #94a3b8;">Ketebalan: <span id="wireThicknessVal" style="font-weight: bold; color: white;">3</span>px</div>
+      <input type="range" id="wireThicknessSlider" min="1" max="10" step="0.5" value="3" style="width: 100%; margin-bottom: 10px; cursor: pointer;" oninput="document.getElementById('wireThicknessVal').innerText = this.value; setWireThickness(this.value)">
+
+      <!-- Tombol Lebar untuk Reset -->
+      <button class="color-btn-reset" onclick="setWireColor(''); setWireThickness('')" title="Kembalikan ke Default">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+          Reset Default
+      </button>
+  </div>
 
 <!-- Panggil main.js sebagai modul utama -->
 <script type="module" src="/src/main.js">

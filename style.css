@@ -50,7 +50,6 @@ body {
   color: var(--text-main);
   height: 100vh;
   overflow: hidden;
-  transition: background-color 0.3s ease, color 0.3s ease;
   touch-action: none;
   -webkit-user-select: none;
   user-select: none;
@@ -71,10 +70,7 @@ body {
   background-color: var(--bg-container);
   border-right: 1px solid var(--border-color);
   display: flex; flex-direction: column; overflow-y: auto; padding: 16px; gap: 12px;
-  transition: width 0.8s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.3s ease, border-color 0.3s ease, padding 0.3s ease, bottom 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  box-shadow: 2px 0 10px rgba(0,0,0,0.02);
-  z-index: 50;
-  touch-action: pan-y;
+  transition: width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), padding 0.3s ease;
 }
 
 .sidebar-top-fixed {
@@ -86,7 +82,6 @@ body {
   padding: 16px 16px 12px 16px; 
   border-bottom: 1px solid var(--border-color); 
   box-shadow: 0 4px 10px -4px rgba(0, 0, 0, 0.05); 
-  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .sidebar-header {
@@ -95,23 +90,29 @@ body {
   padding-bottom: 12px; border-bottom: 1px solid var(--border-color); margin-bottom: 4px;
 }
 
+.sidebar-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .sidebar-section { margin-bottom: 8px; }
 .sidebar-section h4 {
   font-size: 11px; font-weight: 600; color: var(--text-muted);
   text-transform: uppercase; letter-spacing: 0.5px; margin: 10px 0 8px 0;
 }
 
-.canvas-container { flex: 1; display: flex; flex-direction: column; background: var(--bg-body); min-width: 0; transition: background-color 0.3s ease; }
+.canvas-container { flex: 1; display: flex; flex-direction: column; background: var(--bg-body); min-width: 0; }
 
 .toolbar {
-  background: var(--bg-container); padding: 12px 20px;
+  background: var(--bg-container);
+  padding: 12px 20px; height: 55px;
   border-bottom: 1px solid var(--border-color);
   display: flex; gap: 8px; align-items: center; 
   flex-wrap: nowrap; /* 🟢 FIX: Melarang tombol turun ke baris baru */
   overflow-x: auto;  /* 🟢 FIX: Mengizinkan scroll ke samping */
   -webkit-overflow-scrolling: touch; /* Scroll mulus di layar sentuh */
   scrollbar-width: none; /* Sembunyikan garis scrollbar di Firefox */
-  transition: background-color 0.3s ease, border-color 0.3s ease;
   z-index: 40; box-shadow: 0 1px 3px rgba(0,0,0,0.02);
 }
 .toolbar::-webkit-scrollbar { display: none; }
@@ -147,7 +148,8 @@ body {
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   padding: 8px 14px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;
-  transition: all 0.2s; font-size: 12px; white-space: nowrap; touch-action: manipulation; min-height: 34px;
+  transition: transform 0.2s, background-color 0.2s, filter 0.2s; 
+  font-size: 12px; white-space: nowrap; touch-action: manipulation; min-height: 34px;
   flex-shrink: 0;
 }
 .btn svg { width: 14px; height: 14px; stroke-width: 2px; }
@@ -165,7 +167,7 @@ body {
 .btn-theme {
   background: var(--control-bg); color: var(--text-main);
   padding: 8px; border-radius: 6px; min-width: 34px; margin-left: auto; cursor: pointer;
-  border: 1px solid transparent; transition: all 0.2s;
+  border: 1px solid transparent; transition: background-color 0.2s;
 }
 .btn-theme:hover { background: var(--border-color); }
 .btn-theme svg { width: 16px; height: 16px; }
@@ -182,7 +184,7 @@ body {
 
 /* Modals & Toasts */
 .toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; pointer-events: none; z-index: 10000; }
-.toast { background: var(--toast-bg); color: var(--toast-text); padding: 12px 20px; border-radius: 40px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.15); animation: islandOpen 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, islandClose 0.4s cubic-bezier(0.4, 0, 0.2, 1) 2.6s forwards; max-width: 400px; white-space: nowrap; overflow: hidden; transform-origin: right center; pointer-events: none; display: flex; align-items: center; gap: 8px; }
+.toast { background: var(--toast-bg); color: var(--toast-text); padding: 12px 20px; border-radius: 40px; font-size: 13px; font-weight: 600; box-shadow: 0 4px 15px rgba(0,0,0,0.15); animation: islandOpen 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, islandClose 0.4s cubic-bezier(0.4, 0, 0.2, 1) 2.6s; max-width: 400px; white-space: nowrap; overflow: hidden; transform-origin: right center; pointer-events: none; display: flex; align-items: center; gap: 8px; }
 @keyframes islandOpen { 0% { max-width: 0px; padding-left: 0px; padding-right: 0px; opacity: 0; transform: scale(0.85); } 30% { opacity: 1; } 100% { max-width: 400px; padding-left: 20px; padding-right: 20px; opacity: 1; transform: scale(1); } }
 @keyframes islandClose { 0% { max-width: 400px; padding-left: 20px; padding-right: 20px; opacity: 1; transform: scale(1); } 60% { opacity: 1; } 100% { max-width: 0px; padding-left: 0px; padding-right: 0px; opacity: 0; transform: scale(0.85); } }
 
@@ -233,9 +235,8 @@ body {
   background-image: linear-gradient(var(--canvas-grid) 1px, transparent 1px), linear-gradient(90deg, var(--canvas-grid) 1px, transparent 1px);
   background-size: 20px 20px;
   position: relative; 
-  cursor: grab; /* 1. Default: Tangan Terbuka siap menggeser layar */
+  cursor: grab;
   transform-origin: 0 0; transform: scale(1);
-  transition: background-color 0.3s ease;
   touch-action: none;
 }
 
@@ -287,7 +288,8 @@ body.is-routing-wire #canvas {
   background: var(--bg-container);
   border: 1px solid var(--border-color);
   border-radius: var(--radius);
-  padding: 10px 12px; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 10px 12px; cursor: pointer; 
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s, border-color 0.2s;
   user-select: none; display: flex; align-items: center; gap: 12px;
 }
 .component-card:hover { border-color: var(--primary); box-shadow: var(--box-shadow); transform: translateY(-2px); }
@@ -313,9 +315,21 @@ body.is-routing-wire .circuit-component .delete-btn,
 body.is-routing-wire .circuit-component .rotate-btn { display: none !important; }
 body.is-routing-wire .wire-hitbox { pointer-events: none !important; }
 
-.comp-label { font-family: monospace; font-size: 10px; fill: #333; }
+.comp-label { font-family: monospace; font-size: 10px; fill: #050505; }
 [data-theme="dark"] .comp-label { fill: #ccc; }
+/* CSS untuk Garis Komponen (Resistor, Baterai, Kapasitor, dll) */
+.comp-stroke { stroke: #1e293b; /* Warna garis default di mode Light (biru dongker gelap/hitam) */ }
+[data-theme="dark"] .comp-stroke { stroke: #0e0a0a; /* Warna garis di mode Dark (Putih Terang) */ }
+
+/* CSS untuk Isi/Body Komponen (Generator AC, Relay, dll) */
+.comp-body { fill: #e8e6d3; /* Warna isian default (Krem terang) */ }
+[data-theme="dark"] .comp-body { fill: #1e293b; /* Warna isian mode Dark (Abu gelap) */ }
 /* Aturan Counter-Rotation untuk Semua Teks */
+.circuit-component .keep-upright {
+  transform-origin: 50px 50px;
+  transform-box: view-box;
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
 .circuit-component svg text {
   transform-origin: center;       /* Putar di poros tengah teks */
   transform-box: fill-box;        /* Batasi jangkar ke dalam kotak teks saja (Penting untuk SVG!) */
@@ -329,7 +343,7 @@ body.is-routing-wire .wire-hitbox { pointer-events: none !important; }
 /* Perluas area sentuh untuk HP dengan pseudo-element transparan (32x32px hit area) */
 .connection-point::after { content: ''; position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px; border-radius: 50%; background: transparent; }
 .connection-point[data-polarity="neg"] { background: #000000; border-color: #333; }
-.connection-point:hover { background: #22c55e; transform: translate(-50%, -50%) scale(1.5); box-shadow: 0 0 5px rgba(34,197,94,0.8); border-color: #14532d; }
+.connection-point:hover { background: #22c55e; transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 5px rgba(34,197,94,0.8); border-color: #14532d; }
 .connection-point.connected { background: #16a34a; border-color: #14532d; }
 .connection-point.pending { box-shadow: 0 0 10px rgba(34,197,94,0.8); background: #22c55e; transform: translate(-50%, -50%) scale(1.3); }
 .leg-active { stroke: var(--success) !important; }
@@ -535,12 +549,16 @@ body.is-routing-wire .wire-hitbox { pointer-events: none !important; }
 
   /* Sulap Sidebar menjadi Bottom Sheet */
   .sidebar { 
-    position: fixed; bottom: -100%; left: 0; width: 100%; height: 75vh; max-height: none;
+    position: fixed; bottom: 0; left: 0; width: 100%; height: 75vh; max-height: none;
+    transform: translateY(100%); /* Sembunyikan laci ke bawah layar pakai GPU */
     background-color: var(--bg-container); border-top-left-radius: 24px; border-top-right-radius: 24px;
     box-shadow: 0 -10px 40px rgba(0,0,0,0.3); z-index: 1000; padding: 24px 16px 16px 16px; 
     flex-direction: column; flex-wrap: nowrap;
+    will-change: transform; /* Memberi peringatan ke GPU untuk bersiap-siap (Performa Ekstra) */
   }
-  .sidebar.open { bottom: 0; }
+  .sidebar.open { 
+    transform: translateY(0); /* Tarik laci ke posisi awal dengan mulus */
+  }
 
   /* Penyesuaian Sticky Header untuk Laci HP */
   .sidebar-top-fixed { top: -24px; margin-top: -24px; padding-top: 24px; border-top-left-radius: 24px; border-top-right-radius: 24px; }
@@ -559,7 +577,9 @@ body.is-routing-wire .wire-hitbox { pointer-events: none !important; }
 
   /* Toolbar bisa di-scroll Horizontal */
   .toolbar { 
-    padding: 10px 15px 12px 15px; gap: 10px; overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; position: relative; z-index: 100; flex-shrink: 0; 
+    padding: 10px 15px 12px 15px; gap: 10px;
+    overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; 
+    position: relative; z-index: 100; flex-shrink: 0; 
   }
   .toolbar::-webkit-scrollbar { display: none; }
   #canvas-wrapper { min-height: 0; }
@@ -573,8 +593,9 @@ body.is-routing-wire .wire-hitbox { pointer-events: none !important; }
   /* Bottom Navigation Bar (Gaya Instagram) */
   .hide-on-mobile { display: none !important; }
   .bottom-nav-bar {
-    display: flex; position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-container); border-top: 1px solid var(--border-color); z-index: 900; justify-content: space-around; 
-    padding: 10px 0 calc(env(safe-area-inset-bottom, 0px) + 10px) 0; box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+    display: flex; position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-container);
+    border-top: 1px solid var(--border-color); z-index: 900; justify-content: space-around; 
+    padding: 7px 0 calc(env(safe-area-inset-bottom, 0px) + 7px) 0; box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
   }
   .nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; background: none; border: none; color: var(--text-muted); font-size: 11px; font-weight: 600; cursor: pointer; width: 100%; transition: color 0.2s; }
   .nav-item svg { width: 24px; height: 24px; stroke-width: 2px; transition: transform 0.2s; }
@@ -597,7 +618,7 @@ body.is-routing-wire .wire-hitbox { pointer-events: none !important; }
     white-space: normal; /* Izinkan teks turun ke bawah jika panjang */
     text-align: center;
     justify-content: center;
-    animation: toastMobileOpen 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, toastMobileClose 0.4s cubic-bezier(0.4, 0, 0.2, 1) 2.6s forwards;
+    animation: toastMobileOpen 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, toastMobileClose 0.4s cubic-bezier(0.4, 0, 0.2, 1) 2.6s; forwards;
   }
 }
 
@@ -640,13 +661,16 @@ body.is-routing-wire .wire-hitbox { pointer-events: none !important; }
 
 /* Gaya untuk titik-titik elektron yang mengalir */
 .wire-flow {
-  stroke-dasharray: 8 8; /* Panjang garis 8px, celah 8px */
+  stroke-dasharray: 8 8;
   stroke-linecap: round;
-  stroke: rgba(255, 255, 255, 0.8) !important; /* Warna elektron putih terang */
+  stroke: rgba(255, 255, 255, 0.8) !important;
   stroke-width: 2.5 !important;
-  pointer-events: none; /* Agar tidak menghalangi klik kabel */
+  pointer-events: none; 
   
-  /* Panggil animasi. Kecepatan (1s) nanti bisa diubah dinamis lewat JS */
+  /* 🚀 OPTIMASI: Memberitahu browser untuk melakukan render animasi via Hardware Acceleration */
+  will-change: stroke-dashoffset;
+  transform: translateZ(0);
+  
   animation: flowAnim 1s linear infinite; 
 }
 

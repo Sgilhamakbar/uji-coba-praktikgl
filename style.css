@@ -511,7 +511,8 @@ body.is-routing-wire .wire-hitbox { pointer-events: none !important; }
 }
 
 /* B. ELEMEN KHUSUS MOBILE (SEMBUNYIKAN DI DESKTOP) */
-.bottom-nav-bar { display: none; }
+.bottom-nav-bar { display: flex; align-items: center; flex-shrink: 0; }
+@media (min-width: 769px) { .bottom-nav-bar .nav-item { display: none; } }
 .sidebar-overlay { display: none; }
 
 /* C. KHUSUS HP (TAMPILAN LACI BAWAH / BOTTOM SHEET) */
@@ -618,7 +619,7 @@ body.is-routing-wire .wire-hitbox { pointer-events: none !important; }
     white-space: normal; /* Izinkan teks turun ke bawah jika panjang */
     text-align: center;
     justify-content: center;
-    animation: toastMobileOpen 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, toastMobileClose 0.4s cubic-bezier(0.4, 0, 0.2, 1) 2.6s; forwards;
+    animation: toastMobileOpen 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, toastMobileClose 0.4s cubic-bezier(0.4, 0, 0.2, 1) 2.6s forwards;  
   }
 }
 
